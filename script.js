@@ -25,6 +25,7 @@ function mostrarPeliculas(peliculas) {
 // 🔎 BUSCAR
 function buscar() {
     const query = document.getElementById("search").value;
+    if(!query) return;
 
     fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}&language=es-ES`)
         .then(res => res.json())
