@@ -24,4 +24,11 @@ function buscar() {
             `;
         });
     });
-}
+}// Función para cargar pelis famosas al abrir la web
+window.onload = function() {
+    fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=es-ES`)
+    .then(response => response.json())
+    .then(data => {
+        mostrarPeliculas(data.results); // Usa tu función de mostrar resultados
+    });
+};
