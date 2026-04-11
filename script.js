@@ -1,42 +1,66 @@
 const apiKey = "de78d773b36e035ae311fb891704fbfa";
 
+// 🔍 MOSTRAR PELIS
 function mostrarPeliculas(peliculas) {
-    let contenedor = document.getElementById('resultados');
+    const contenedor = document.getElementById("resultados");
     contenedor.innerHTML = "";
 
     peliculas.forEach(peli => {
-        let poster = peli.poster_path 
-            ? `https://image.tmdb.org/t/p/w500${peli.poster_path}` 
-            : "https://via.placeholder.com/200x300?text=Sin+Foto";
-        
-        let estrellas = Math.round(peli.vote_average / 2);
-        let rating = "⭐".repeat(estrellas);
+        let poster = peli.poster_path
+            ? `https://image.tmdb.org/t/p/w500${peli.poster_path}`
+            : "https://via.placeholder.com/200x300";
+
+        let estrellas = "⭐".repeat(Math.round(peli.vote_average / 2));
 
         contenedor.innerHTML += `
-            <div class="pelicula">
+            <div class="pelicula" onclick="verDetalle(${peli.id})">
                 <img src="${poster}">
                 <h3>${peli.title}</h3>
-                <p>${rating}</p>
+                <p>${estrellas}</p>
             </div>
         `;
     });
 }
 
+// 🔎 BUSCAR
 function buscar() {
-    let query = document.getElementById('search').value;
+    const query = document.getElementById("search").value;
 
     fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}&language=es-ES`)
-    .then(res => res.json())
-    .then(data => {
-        mostrarPeliculas(data.results);
-    });
+        .then(res => res.json())
+        .then(data => mostrarPeliculas(data.results));
 }
 
-// Pelis populares al abrir
-window.onload = function() {
+// 🎬 DETALLE COMPLETO
+function verDetalle(id) {
+    fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES&append_to_response=credits`)
+        .then(res => res.json())
+        .then(peli => {
+
+            let director = peli.credits.crew.find(p => p.job === "Director");
+            let actores = peli.credits.cast.slice(0, 5).map(a => a.name).join(", ");
+
+            document.getElementById("detalle").innerHTML = `
+                <h2>${peli.title}</h2>
+                <p><strong>📅 Año:</strong> ${peli.release_date}</p>
+                <p><strong>🎬 Director:</strong> ${director ? director.name : "No disponible"}</p>
+                <p><strong>🎭 Actores:</strong> ${actores}</p>
+                <p><strong>⭐ Nota:</strong> ${peli.vote_average}</p>
+                <p><strong>📝 Sinopsis:</strong> ${peli.overview}</p>
+            `;
+
+            document.getElementById("modal").style.display = "block";
+        });
+}
+
+// ❌ CERRAR
+function cerrarModal() {
+    document.getElementById("modal").style.display = "none";
+}
+
+// 🎥 INICIO
+window.onload = function () {
     fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=es-ES`)
-    .then(res => res.json())
-    .then(data => {
-        mostrarPeliculas(data.results);
-    });
+        .then(res => res.json())
+        .then(data => mostrarPeliculas(data.results));
 };
