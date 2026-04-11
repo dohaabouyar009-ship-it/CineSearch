@@ -1,0 +1,45 @@
+body {
+    background-color: #121212;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+}
+
+h1 { color: #E50914; } /* Rojo tipo Netflix */
+
+.buscador { margin: 20px; }
+
+input {
+    padding: 10px;
+    width: 250px;
+    border-radius: 5px;
+    border: none;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #FFD700; /* Oro */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#resultados {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pelicula {
+    width: 200px;
+    margin: 15px;
+    background: #1e1e1e;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.pelicula img {
+    width: 100%;
+    border-radius: 5px;
+}
