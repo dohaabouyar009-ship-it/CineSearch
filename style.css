@@ -8,15 +8,15 @@ body {
 
 /* HEADER Y LOGO */
 header {
-    padding: 40px 20px; /* Más espacio arriba */
+    padding: 40px 20px;
     display: flex;
     justify-content: center;
 }
 
 #logo {
-    width: 350px; /* Logo más grande */
+    width: 350px;
     height: auto;
-    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.2)); /* Brillo sutil */
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.2));
 }
 
 /* BUSCADOR */

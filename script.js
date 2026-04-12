@@ -32,14 +32,25 @@ function buscar() {
         .then(data => mostrarPeliculas(data.results));
 }
 
-// 🎬 DETALLE COMPLETO
+// 🎬 DETALLE COMPLETO + TRAILER
 function verDetalle(id) {
-    fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES&append_to_response=credits`)
+    fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES&append_to_response=credits,videos`)
         .then(res => res.json())
         .then(peli => {
 
             let director = peli.credits.crew.find(p => p.job === "Director");
             let actores = peli.credits.cast.slice(0, 5).map(a => a.name).join(", ");
+
+            // 🎥 TRAILER
+            let trailer = peli.videos.results.find(
+                v => v.type === "Trailer" && v.site === "YouTube"
+            );
+
+            let trailerHTML = trailer
+                ? `<iframe width="100%" height="315"
+                    src="https://www.youtube.com/embed/${trailer.key}"
+                    frameborder="0" allowfullscreen></iframe>`
+                : "<p>Trailer no disponible</p>";
 
             document.getElementById("detalle").innerHTML = `
                 <h2>${peli.title}</h2>
@@ -48,6 +59,8 @@ function verDetalle(id) {
                 <p><strong>🎭 Actores:</strong> ${actores}</p>
                 <p><strong>⭐ Nota:</strong> ${peli.vote_average}</p>
                 <p><strong>📝 Sinopsis:</strong> ${peli.overview}</p>
+                <h3>🎥 Trailer</h3>
+                ${trailerHTML}
             `;
 
             document.getElementById("modal").style.display = "block";
