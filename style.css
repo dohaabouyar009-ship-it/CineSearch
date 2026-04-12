@@ -6,31 +6,17 @@ body {
     text-align: center;
 }
 
-/* HEADER */
+/* HEADER Y LOGO */
 header {
     padding: 40px 20px;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    justify-content: center;
 }
 
-/* LOGO MÁS GRANDE */
 #logo {
-    width: 450px;
+    width: 350px;
     height: auto;
-    margin-bottom: 10px;
-}
-
-/* TITULO */
-h1 {
-    color: #E50914;
-    margin: 5px;
-}
-
-/* SUBTITULO */
-.subtitulo {
-    color: #ccc;
-    margin-bottom: 20px;
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.2));
 }
 
 /* BUSCADOR */
@@ -43,6 +29,7 @@ input {
     width: 260px;
     border-radius: 8px;
     border: none;
+    outline: none;
 }
 
 button {
@@ -51,13 +38,21 @@ button {
     border: none;
     border-radius: 8px;
     cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
 }
 
-/* RESULTADOS */
+button:hover {
+    transform: scale(1.05);
+    background: #e6c200;
+}
+
+/* GRID DE PELÍCULAS */
 #resultados {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    padding: 20px;
 }
 
 /* TARJETAS */
@@ -67,12 +62,13 @@ button {
     background: #111;
     border-radius: 10px;
     overflow: hidden;
-    cursor: pointer;
     transition: 0.3s;
+    cursor: pointer;
 }
 
 .pelicula:hover {
     transform: scale(1.05);
+    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.4);
 }
 
 .pelicula img {
@@ -81,27 +77,40 @@ button {
 
 .pelicula h3 {
     margin: 10px;
+    font-size: 1.1em;
+}
+
+.pelicula p {
+    margin-bottom: 10px;
 }
 
 /* MODAL */
 .modal {
     display: none;
     position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.85);
+    z-index: 1000;
 }
 
 .modal-content {
     background: #111;
     margin: 5% auto;
-    padding: 20px;
-    width: 70%;
+    padding: 30px;
+    width: 60%;
     border-radius: 10px;
+    color: white;
     text-align: left;
+    position: relative;
 }
 
 .cerrar {
-    float: right;
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
     cursor: pointer;
 }

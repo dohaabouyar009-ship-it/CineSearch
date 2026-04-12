@@ -25,7 +25,7 @@ function mostrarPeliculas(peliculas) {
 // 🔎 BUSCAR
 function buscar() {
     const query = document.getElementById("search").value;
-    if(!query) return;
+    if (!query) return;
 
     fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}&language=es-ES`)
         .then(res => res.json())
@@ -37,7 +37,6 @@ function verDetalle(id) {
     fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES&append_to_response=credits`)
         .then(res => res.json())
         .then(peli => {
-
             let director = peli.credits.crew.find(p => p.job === "Director");
             let actores = peli.credits.cast.slice(0, 5).map(a => a.name).join(", ");
 
@@ -54,12 +53,12 @@ function verDetalle(id) {
         });
 }
 
-// ❌ CERRAR
+// ❌ CERRAR MODAL
 function cerrarModal() {
     document.getElementById("modal").style.display = "none";
 }
 
-// 🎥 INICIO
+// 🎥 INICIO (PELIS POPULARES)
 window.onload = function () {
     fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=es-ES`)
         .then(res => res.json())
