@@ -1,6 +1,6 @@
 const apiKey = "de78d773b36e035ae311fb891704fbfa";
 
-// MOSTRAR PELIS
+// 🔍 MOSTRAR PELIS
 function mostrarPeliculas(peliculas) {
     const contenedor = document.getElementById("resultados");
     contenedor.innerHTML = "";
@@ -22,32 +22,23 @@ function mostrarPeliculas(peliculas) {
     });
 }
 
-// BUSCAR
+// 🔎 BUSCAR
 function buscar() {
     const query = document.getElementById("search").value;
-    if (!query) return;
 
     fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}&language=es-ES`)
         .then(res => res.json())
         .then(data => mostrarPeliculas(data.results));
 }
 
-// DETALLE + TRAILER
+// 🎬 DETALLE COMPLETO
 function verDetalle(id) {
-    fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES&append_to_response=credits,videos`)
+    fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES&append_to_response=credits`)
         .then(res => res.json())
         .then(peli => {
 
             let director = peli.credits.crew.find(p => p.job === "Director");
             let actores = peli.credits.cast.slice(0, 5).map(a => a.name).join(", ");
-
-            let trailer = peli.videos.results.find(v => v.site === "YouTube");
-
-            let trailerHTML = trailer
-                ? `<iframe width="100%" height="315"
-                    src="https://www.youtube.com/embed/${trailer.key}"
-                    allowfullscreen></iframe>`
-                : "<p>No hay trailer disponible</p>";
 
             document.getElementById("detalle").innerHTML = `
                 <h2>${peli.title}</h2>
@@ -56,20 +47,18 @@ function verDetalle(id) {
                 <p><strong>🎭 Actores:</strong> ${actores}</p>
                 <p><strong>⭐ Nota:</strong> ${peli.vote_average}</p>
                 <p><strong>📝 Sinopsis:</strong> ${peli.overview}</p>
-                <h3>🎥 Trailer</h3>
-                ${trailerHTML}
             `;
 
             document.getElementById("modal").style.display = "block";
         });
 }
 
-// CERRAR
+// ❌ CERRAR
 function cerrarModal() {
     document.getElementById("modal").style.display = "none";
 }
 
-// INICIO
+// 🎥 INICIO
 window.onload = function () {
     fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=es-ES`)
         .then(res => res.json())
