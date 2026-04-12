@@ -8,16 +8,29 @@ body {
 
 /* HEADER */
 header {
-    padding: 20px;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
+/* LOGO MÁS GRANDE */
 #logo {
-    width: 80px;
+    width: 450px;
+    height: auto;
+    margin-bottom: 10px;
 }
 
 /* TITULO */
 h1 {
     color: #E50914;
+    margin: 5px;
+}
+
+/* SUBTITULO */
+.subtitulo {
+    color: #ccc;
+    margin-bottom: 20px;
 }
 
 /* BUSCADOR */
@@ -30,7 +43,6 @@ input {
     width: 260px;
     border-radius: 8px;
     border: none;
-    outline: none;
 }
 
 button {
@@ -39,15 +51,13 @@ button {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    font-weight: bold;
 }
 
-/* GRID */
+/* RESULTADOS */
 #resultados {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    padding: 20px;
 }
 
 /* TARJETAS */
@@ -57,34 +67,26 @@ button {
     background: #111;
     border-radius: 10px;
     overflow: hidden;
-    transition: 0.3s;
     cursor: pointer;
+    transition: 0.3s;
 }
 
 .pelicula:hover {
     transform: scale(1.05);
-    box-shadow: 0 10px 25px rgba(255,215,0,0.4);
 }
 
-/* IMAGEN */
 .pelicula img {
     width: 100%;
 }
 
-/* TEXTO */
 .pelicula h3 {
     margin: 10px;
-}
-
-.pelicula p {
-    margin-bottom: 10px;
 }
 
 /* MODAL */
 .modal {
     display: none;
     position: fixed;
-    top: 0;
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.85);
@@ -96,10 +98,10 @@ button {
     padding: 20px;
     width: 70%;
     border-radius: 10px;
+    text-align: left;
 }
 
 .cerrar {
     float: right;
-    font-size: 22px;
     cursor: pointer;
 }
