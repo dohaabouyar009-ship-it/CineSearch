@@ -2,48 +2,55 @@ body {
     margin: 0;
     background: linear-gradient(to bottom, #000000, #1a1a1a);
     color: white;
-    font-family: Arial, sans-serif;
+    font-family: 'Arial', sans-serif;
     text-align: center;
 }
 
 /* HEADER Y LOGO */
 header {
-    padding: 40px 20px;
+    padding: 60px 20px;
     display: flex;
     justify-content: center;
 }
 
 #logo {
-    width: 350px;
+    width: 550px; /* LOGO MUY GRANDE */
     height: auto;
-    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.2));
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.3));
+    transition: transform 0.3s ease;
+}
+
+#logo:hover {
+    transform: scale(1.02);
 }
 
 /* BUSCADOR */
 .buscador {
-    margin: 20px;
+    margin: 30px;
 }
 
 input {
-    padding: 12px;
-    width: 260px;
-    border-radius: 8px;
+    padding: 15px;
+    width: 300px;
+    border-radius: 25px;
     border: none;
     outline: none;
+    font-size: 16px;
 }
 
 button {
-    padding: 12px 20px;
+    padding: 15px 25px;
     background: #FFD700;
     border: none;
-    border-radius: 8px;
+    border-radius: 25px;
     cursor: pointer;
     font-weight: bold;
+    font-size: 16px;
     transition: 0.3s;
 }
 
 button:hover {
-    transform: scale(1.05);
+    transform: scale(1.1);
     background: #e6c200;
 }
 
@@ -60,15 +67,17 @@ button:hover {
     width: 200px;
     margin: 15px;
     background: #111;
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
     transition: 0.3s;
     cursor: pointer;
+    border: 1px solid transparent;
 }
 
 .pelicula:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.4);
+    transform: translateY(-10px);
+    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.5);
+    border: 1px solid #FFD700;
 }
 
 .pelicula img {
@@ -77,11 +86,7 @@ button:hover {
 
 .pelicula h3 {
     margin: 10px;
-    font-size: 1.1em;
-}
-
-.pelicula p {
-    margin-bottom: 10px;
+    font-size: 1rem;
 }
 
 /* MODAL */
@@ -92,25 +97,27 @@ button:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.85);
+    background: rgba(0,0,0,0.9);
     z-index: 1000;
 }
 
 .modal-content {
-    background: #111;
+    background: #1a1a1a;
     margin: 5% auto;
     padding: 30px;
     width: 60%;
-    border-radius: 10px;
+    border-radius: 15px;
     color: white;
     text-align: left;
     position: relative;
+    border: 1px solid #333;
 }
 
 .cerrar {
     position: absolute;
     top: 15px;
     right: 20px;
-    font-size: 28px;
+    font-size: 30px;
     cursor: pointer;
+    color: #FFD700;
 }
