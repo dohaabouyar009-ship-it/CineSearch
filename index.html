@@ -11,12 +11,7 @@
 <header>
     <img src="logo.svg" alt="CineSearch" id="logo">
 </header>
-<div class="login-box">
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Contraseña">
-    <button onclick="registrar()">Registrarse</button>
-    <button onclick="login()">Login</button>
-</div>
+
 <div class="buscador">
     <input type="text" id="search" placeholder="Busca una peli o serie...">
     <button onclick="buscar()">Buscar 🔎</button>
@@ -30,48 +25,6 @@
         <div id="detalle"></div>
     </div>
 </div>
-
-<script type="module">
-
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDImXOKqLRBH58wrEaIkG93j4nYg5mt9Uw",
-    authDomain: "cinesearch-c70c1.firebaseapp.com",
-    projectId: "cinesearch-c70c1",
-    storageBucket: "cinesearch-c70c1.firebasestorage.app",
-    messagingSenderId: "810716929909",
-    appId: "1:810716929909:web:f86de776e63e080f0f7d3c",
-    measurementId: "G-5PJWZ9L7WN"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const auth = getAuth(app);
-
-  // 🔐 REGISTRO
-  window.registrar = function() {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
-
-    createUserWithEmailAndPassword(auth, email, pass)
-      .then(() => alert("Usuario registrado ✅"))
-      .catch(err => alert(err.message));
-  }
-
-  // 🔓 LOGIN
-  window.login = function() {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
-
-    signInWithEmailAndPassword(auth, email, pass)
-      .then(() => alert("Login correcto 🔥"))
-      .catch(err => alert(err.message));
-  }
-
-</script>
 
 <script src="script.js"></script>
 

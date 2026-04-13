@@ -121,17 +121,3 @@ button:hover {
     cursor: pointer;
     color: #FFD700;
 }
-.login-box {
-    margin: 20px;
-}
-
-.login-box input {
-    padding: 10px;
-    margin: 5px;
-    border-radius: 5px;
-    border: none;
-}
-
-.login-box button {
-    margin: 5px;
-}
