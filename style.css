@@ -121,3 +121,8 @@ button:hover {
     cursor: pointer;
     color: #FFD700;
 }
+#btnLogin {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}

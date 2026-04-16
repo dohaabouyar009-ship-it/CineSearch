@@ -64,3 +64,28 @@ window.onload = function () {
         .then(res => res.json())
         .then(data => mostrarPeliculas(data.results));
 };
+function abrirLogin() {
+    document.getElementById("loginModal").style.display = "block";
+}
+
+function cerrarLogin() {
+    document.getElementById("loginModal").style.display = "none";
+}
+
+function registro() {
+    const email = document.getElementById("email").value;
+    const pass = document.getElementById("password").value;
+
+    firebase.auth().createUserWithEmailAndPassword(email, pass)
+        .then(() => alert("Registrado ✅"))
+        .catch(err => alert(err.message));
+}
+
+function login() {
+    const email = document.getElementById("email").value;
+    const pass = document.getElementById("password").value;
+
+    firebase.auth().signInWithEmailAndPassword(email, pass)
+        .then(() => alert("Login correcto 🔥"))
+        .catch(err => alert(err.message));
+}

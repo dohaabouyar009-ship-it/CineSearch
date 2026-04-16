@@ -10,6 +10,7 @@
 
 <header>
     <img src="logo.svg" alt="CineSearch" id="logo">
+    <button onclick="abrirLogin()" id="btnLogin">Login</button>
 </header>
 
 <div class="buscador">
@@ -25,6 +26,35 @@
         <div id="detalle"></div>
     </div>
 </div>
+
+<!-- LOGIN MODAL (NUEVO) -->
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <span onclick="cerrarLogin()" class="cerrar">✖</span>
+        <h2>Iniciar sesión</h2>
+        <input type="email" id="email" placeholder="Email"><br><br>
+        <input type="password" id="password" placeholder="Contraseña"><br><br>
+        <button onclick="login()">Entrar</button>
+        <button onclick="registro()">Registrarse</button>
+    </div>
+</div>
+
+<!-- FIREBASE (NUEVO) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDImXOKqLRBH58wrEaIkG93j4nYg5mt9Uw",
+  authDomain: "cinesearch-c70c1.firebaseapp.com",
+  projectId: "cinesearch-c70c1",
+  storageBucket: "cinesearch-c70c1.firebasestorage.app",
+  messagingSenderId: "810716929909",
+  appId: "1:810716929909:web:f86de776e63e080f0f7d3c"
+};
+
+firebase.initializeApp(firebaseConfig);
+</script>
 
 <script src="script.js"></script>
 
