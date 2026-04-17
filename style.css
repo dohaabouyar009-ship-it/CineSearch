@@ -126,3 +126,14 @@ button:hover {
     top: 20px;
     right: 20px;
 }
+.corazon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.pelicula {
+    position: relative;
+}

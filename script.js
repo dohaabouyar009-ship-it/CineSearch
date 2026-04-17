@@ -13,10 +13,14 @@ function mostrarPeliculas(peliculas) {
         let estrellas = "⭐".repeat(Math.round(peli.vote_average / 2));
 
         contenedor.innerHTML += `
-            <div class="pelicula" onclick="verDetalle(${peli.id})">
-                <img src="${poster}">
-                <h3>${peli.title}</h3>
-                <p>${estrellas}</p>
+            <div class="pelicula">
+                <span class="corazon" onclick="guardarFavorito(event, ${peli.id}, '${peli.title.replace(/'/g, "")}')">❤️</span>
+                
+                <div onclick="verDetalle(${peli.id})">
+                    <img src="${poster}">
+                    <h3>${peli.title}</h3>
+                    <p>${estrellas}</p>
+                </div>
             </div>
         `;
     });
@@ -64,6 +68,8 @@ window.onload = function () {
         .then(res => res.json())
         .then(data => mostrarPeliculas(data.results));
 };
+
+// 🔐 LOGIN / REGISTRO
 function abrirLogin() {
     document.getElementById("loginModal").style.display = "block";
 }
@@ -86,15 +92,18 @@ function login() {
     const pass = document.getElementById("password").value;
 
     firebase.auth().signInWithEmailAndPassword(email, pass)
-        .then(() => alert("Login correcto 🔥"))
+        .then(() => {
+            alert("Login correcto 🔥");
+            cerrarLogin();
+        })
         .catch(err => alert(err.message));
 }
+
 // 🔐 CONTROL DE SESIÓN
 firebase.auth().onAuthStateChanged(user => {
     const btn = document.getElementById("btnLogin");
 
     if (user) {
-        // Coger primera letra válida
         let inicial = user.email.replace(/[^a-zA-Z]/g, "").charAt(0).toUpperCase();
         btn.innerText = inicial;
     } else {
@@ -102,21 +111,22 @@ firebase.auth().onAuthStateChanged(user => {
     }
 });
 
-// 🆕 REGISTRO
-function registro() {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
+// ❤️ GUARDAR FAVORITOS (NUEVO)
+function guardarFavorito(event, id, titulo) {
+    event.stopPropagation();
 
-    firebase.auth().createUserWithEmailAndPassword(email, pass)
-        .then(() => alert("Registrado ✅"))
-        .catch(err => alert(err.message));
-}
+    const user = firebase.auth().currentUser;
 
-// ABRIR / CERRAR LOGIN
-function abrirLogin() {
-    document.getElementById("loginModal").style.display = "block";
-}
+    if (!user) {
+        alert("Tienes que iniciar sesión");
+        return;
+    }
 
-function cerrarLogin() {
-    document.getElementById("loginModal").style.display = "none";
+    firebase.firestore().collection("favoritos").add({
+        user: user.uid,
+        peliculaId: id,
+        titulo: titulo
+    })
+    .then(() => alert("Añadido a favoritos ❤️"))
+    .catch(err => console.error(err));
 }
