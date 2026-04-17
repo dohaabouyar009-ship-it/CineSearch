@@ -89,3 +89,12 @@ function login() {
         .then(() => alert("Login correcto 🔥"))
         .catch(err => alert(err.message));
 }
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        console.log("Usuario logueado:", user.email);
+        document.getElementById("btnLogin").innerText = user.email;
+    } else {
+        console.log("No hay usuario");
+        document.getElementById("btnLogin").innerText = "Login";
+    }
+});
