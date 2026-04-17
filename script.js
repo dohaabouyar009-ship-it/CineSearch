@@ -89,12 +89,34 @@ function login() {
         .then(() => alert("Login correcto 🔥"))
         .catch(err => alert(err.message));
 }
+// 🔐 CONTROL DE SESIÓN
 firebase.auth().onAuthStateChanged(user => {
+    const btn = document.getElementById("btnLogin");
+
     if (user) {
-        console.log("Usuario logueado:", user.email);
-        document.getElementById("btnLogin").innerText = user.email;
+        // Coger primera letra válida
+        let inicial = user.email.replace(/[^a-zA-Z]/g, "").charAt(0).toUpperCase();
+        btn.innerText = inicial;
     } else {
-        console.log("No hay usuario");
-        document.getElementById("btnLogin").innerText = "Login";
+        btn.innerText = "Login";
     }
 });
+
+// 🆕 REGISTRO
+function registro() {
+    const email = document.getElementById("email").value;
+    const pass = document.getElementById("password").value;
+
+    firebase.auth().createUserWithEmailAndPassword(email, pass)
+        .then(() => alert("Registrado ✅"))
+        .catch(err => alert(err.message));
+}
+
+// ABRIR / CERRAR LOGIN
+function abrirLogin() {
+    document.getElementById("loginModal").style.display = "block";
+}
+
+function cerrarLogin() {
+    document.getElementById("loginModal").style.display = "none";
+}
