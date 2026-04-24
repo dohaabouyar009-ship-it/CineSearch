@@ -9,9 +9,11 @@
 <body>
 
 <header>
-    <img src="logo.svg" id="logo">
+    <img src="logo.svg" alt="CineSearch" id="logo">
 
-    <button onclick="verFavoritos()" id="btnFav">❤️</button>
+    <!-- ❤️ BOTÓN FAVORITOS -->
+    <span id="btnFavoritos" onclick="verFavoritos()">🤍</span>
+
     <button onclick="abrirLogin()" id="btnLogin">Login</button>
 </header>
 
@@ -34,7 +36,7 @@
 <div id="loginModal" class="modal">
     <div class="modal-content">
         <span onclick="cerrarLogin()" class="cerrar">✖</span>
-        <h2>Login</h2>
+        <h2>Iniciar sesión</h2>
         <input type="email" id="email" placeholder="Email"><br><br>
         <input type="password" id="password" placeholder="Contraseña"><br><br>
         <button onclick="login()">Entrar</button>
@@ -42,12 +44,12 @@
     </div>
 </div>
 
-<!-- FAVORITOS -->
-<div id="favModal" class="modal">
+<!-- ❤️ MODAL FAVORITOS -->
+<div id="favoritosModal" class="modal">
     <div class="modal-content">
-        <span onclick="cerrarFav()" class="cerrar">✖</span>
-        <h2>❤️ Favoritos</h2>
-        <div id="listaFav"></div>
+        <span onclick="cerrarFavoritos()" class="cerrar">✖</span>
+        <h2>❤️ Tus favoritos</h2>
+        <div id="listaFavoritos"></div>
     </div>
 </div>
 
@@ -58,9 +60,12 @@
 
 <script>
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_DOMINIO",
-  projectId: "TU_ID",
+  apiKey: "AIzaSyDImXOKqLRBH58wrEaIkG93j4nYg5mt9Uw",
+  authDomain: "cinesearch-c70c1.firebaseapp.com",
+  projectId: "cinesearch-c70c1",
+  storageBucket: "cinesearch-c70c1.firebasestorage.app",
+  messagingSenderId: "810716929909",
+  appId: "1:810716929909:web:f86de776e63e080f0f7d3c"
 };
 
 firebase.initializeApp(firebaseConfig);

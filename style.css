@@ -126,25 +126,13 @@ button:hover {
     top: 20px;
     right: 20px;
 }
-.corazon {
+
+#btnFavoritos {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 20px;
+    right: 90px;
     font-size: 22px;
     cursor: pointer;
-}
-#btnLogin {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-}
-
-#btnFav {
-    position: absolute;
-    top: 20px;
-    right: 80px;
-    background: transparent;
-    font-size: 22px;
 }
 
 .corazon {
@@ -153,11 +141,6 @@ button:hover {
     right: 10px;
     font-size: 22px;
     cursor: pointer;
-    color: white;
-}
-
-.corazon.activo {
-    color: red;
 }
 
 .pelicula {
