@@ -1,148 +1,46 @@
 body {
-    margin: 0;
-    background: linear-gradient(to bottom, #000000, #1a1a1a);
-    color: white;
-    font-family: 'Arial', sans-serif;
-    text-align: center;
+    background:#0a0a0a;
+    color:white;
+    font-family:Arial;
 }
 
-/* HEADER Y LOGO */
 header {
-    padding: 60px 20px;
-    display: flex;
-    justify-content: center;
+    display:flex;
+    justify-content:center;
+    position:relative;
+    padding:40px;
 }
 
-#logo {
-    width: 550px; /* LOGO MUY GRANDE */
-    height: auto;
-    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.3));
-    transition: transform 0.3s ease;
-}
-
-#logo:hover {
-    transform: scale(1.02);
-}
-
-/* BUSCADOR */
-.buscador {
-    margin: 30px;
-}
-
-input {
-    padding: 15px;
-    width: 300px;
-    border-radius: 25px;
-    border: none;
-    outline: none;
-    font-size: 16px;
-}
-
-button {
-    padding: 15px 25px;
-    background: #FFD700;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 16px;
-    transition: 0.3s;
-}
-
-button:hover {
-    transform: scale(1.1);
-    background: #e6c200;
-}
-
-/* GRID DE PELÍCULAS */
-#resultados {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 20px;
-}
-
-/* TARJETAS */
-.pelicula {
-    width: 200px;
-    margin: 15px;
-    background: #111;
-    border-radius: 12px;
-    overflow: hidden;
-    transition: 0.3s;
-    cursor: pointer;
-    border: 1px solid transparent;
-}
-
-.pelicula:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.5);
-    border: 1px solid #FFD700;
-}
-
-.pelicula img {
-    width: 100%;
-}
-
-.pelicula h3 {
-    margin: 10px;
-    font-size: 1rem;
-}
-
-/* MODAL */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.9);
-    z-index: 1000;
-}
-
-.modal-content {
-    background: #1a1a1a;
-    margin: 5% auto;
-    padding: 30px;
-    width: 60%;
-    border-radius: 15px;
-    color: white;
-    text-align: left;
-    position: relative;
-    border: 1px solid #333;
-}
-
-.cerrar {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 30px;
-    cursor: pointer;
-    color: #FFD700;
-}
-#btnLogin {
-    position: absolute;
-    top: 20px;
-    right: 20px;
+.header-actions {
+    position:absolute;
+    right:20px;
+    display:flex;
+    gap:10px;
 }
 
 #btnFavoritos {
-    position: absolute;
-    top: 20px;
-    right: 90px;
-    font-size: 22px;
-    cursor: pointer;
-}
-
-.corazon {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 22px;
-    cursor: pointer;
+    cursor:pointer;
 }
 
 .pelicula {
-    position: relative;
+    position:relative;
+}
+
+.corazon {
+    position:absolute;
+    top:10px;
+    right:10px;
+    cursor:pointer;
+}
+.modal {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:black;
+}
+.modal-content {
+    background:#111;
+    padding:20px;
+    margin:10% auto;
+    width:300px;
 }
