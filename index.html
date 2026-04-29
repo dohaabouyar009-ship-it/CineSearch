@@ -5,90 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CineSearch</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <header>
     <img src="logo.svg" alt="CineSearch" id="logo">
 
-    <div class="header-actions">
-        <span id="btnFavoritos" onclick="verFavoritos()"></span>
-
-        <div id="avatarWrapper">
-            <button onclick="abrirLogin()" id="btnLogin">Iniciar sesión</button>
-            <div id="avatarBtn" class="avatar-btn" onclick="toggleUserMenu()" style="display:none">
-                <img id="avatarImg" src="" alt="" style="display:none">
-                <span id="avatarInitial"></span>
-            </div>
-        </div>
-    </div>
-
-    <div id="userMenu" class="user-menu" style="display:none">
-        <div class="user-menu-info">
-            <div class="user-menu-avatar">
-                <img id="menuAvatarImg" src="" alt="" style="display:none">
-                <span id="menuAvatarInitial"></span>
-            </div>
-            <div class="user-menu-text">
-                <p id="menuEmail"></p>
-                <span>Cuenta activa</span>
-            </div>
-        </div>
-        <hr>
-        <button onclick="cerrarSesion()" class="btn-logout">Cerrar sesión</button>
-    </div>
+    <span id="btnFavoritos" onclick="verFavoritos()">🤍</span>
+    <button onclick="abrirLogin()" id="btnLogin">Login</button>
 </header>
 
 <div class="buscador">
-    <div class="search-box">
-        <input type="text" id="search" placeholder="Busca una película..." onkeydown="if(event.key==='Enter') buscar()">
-        <button onclick="buscar()">Buscar</button>
-    </div>
+    <input type="text" id="search" placeholder="Busca una peli o serie...">
+    <button onclick="buscar()">Buscar 🔎</button>
 </div>
 
 <div id="resultados"></div>
 
-<div id="modal" class="modal" onclick="cerrarModalFuera(event, 'modal')">
+<!-- MODAL DETALLE -->
+<div id="modal" class="modal">
     <div class="modal-content">
-        <button onclick="cerrarModal()" class="cerrar">✖</button>
+        <span onclick="cerrarModal()" class="cerrar">✖</span>
         <div id="detalle"></div>
     </div>
 </div>
 
-<div id="loginModal" class="modal" onclick="cerrarModalFuera(event, 'loginModal')">
+<!-- LOGIN -->
+<div id="loginModal" class="modal">
     <div class="modal-content">
-        <button onclick="cerrarLogin()" class="cerrar">✖</button>
-        <h2>Login</h2>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Contraseña">
-        <div id="authError" style="color:red;display:none"></div>
+        <span onclick="cerrarLogin()" class="cerrar">✖</span>
+        <h2>Iniciar sesión</h2>
+        <input type="email" id="email" placeholder="Email"><br><br>
+        <input type="password" id="password" placeholder="Contraseña"><br><br>
         <button onclick="login()">Entrar</button>
         <button onclick="registro()">Registrarse</button>
     </div>
 </div>
 
-<div id="favoritosModal" class="modal" onclick="cerrarModalFuera(event, 'favoritosModal')">
+<!-- FAVORITOS -->
+<div id="favoritosModal" class="modal">
     <div class="modal-content">
-        <button onclick="cerrarFavoritos()" class="cerrar">✖</button>
-        <h2>Favoritos</h2>
+        <span onclick="cerrarFavoritos()" class="cerrar">✖</span>
+        <h2>❤️ Tus favoritos</h2>
         <div id="listaFavoritos"></div>
     </div>
 </div>
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_AUTH_DOMAIN",
-  projectId: "TU_PROJECT_ID"
+  apiKey: "AIzaSyDImXOKqLRBH58wrEaIkG93j4nYg5mt9Uw",
+  authDomain: "cinesearch-c70c1.firebaseapp.com",
+  projectId: "cinesearch-c70c1",
+  storageBucket: "cinesearch-c70c1.firebasestorage.app",
+  messagingSenderId: "810716929909",
+  appId: "1:810716929909:web:f86de776e63e080f0f7d3c"
 };
+
 firebase.initializeApp(firebaseConfig);
 </script>
 
 <script src="script.js"></script>
+
 </body>
 </html>

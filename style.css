@@ -1,46 +1,102 @@
 body {
-    background:#0a0a0a;
-    color:white;
-    font-family:Arial;
+    margin: 0;
+    background: linear-gradient(to bottom, #000000, #1a1a1a);
+    color: white;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
 }
 
+/* HEADER */
 header {
-    display:flex;
-    justify-content:center;
-    position:relative;
-    padding:40px;
+    padding: 60px 20px;
+    display: flex;
+    justify-content: center;
 }
 
-.header-actions {
-    position:absolute;
-    right:20px;
-    display:flex;
-    gap:10px;
+#logo {
+    width: 550px;
+}
+
+/* BOTONES HEADER */
+#btnLogin {
+    position: absolute;
+    top: 20px;
+    right: 20px;
 }
 
 #btnFavoritos {
-    cursor:pointer;
+    position: absolute;
+    top: 20px;
+    right: 100px;
+    font-size: 22px;
+    cursor: pointer;
 }
 
+/* BUSCADOR */
+.buscador {
+    margin: 30px;
+}
+
+input {
+    padding: 15px;
+    width: 300px;
+    border-radius: 25px;
+    border: none;
+}
+
+button {
+    padding: 15px 25px;
+    background: #FFD700;
+    border-radius: 25px;
+    cursor: pointer;
+}
+
+/* GRID */
+#resultados {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* TARJETAS */
 .pelicula {
-    position:relative;
+    width: 200px;
+    margin: 15px;
+    background: #111;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
 }
 
+.pelicula img {
+    width: 100%;
+}
+
+/* CORAZÓN */
 .corazon {
-    position:absolute;
-    top:10px;
-    right:10px;
-    cursor:pointer;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 22px;
+    cursor: pointer;
 }
+
+/* MODAL */
 .modal {
-    display:none;
-    position:fixed;
-    inset:0;
-    background:black;
+    display: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
 }
+
 .modal-content {
-    background:#111;
-    padding:20px;
-    margin:10% auto;
-    width:300px;
+    background: #1a1a1a;
+    margin: 5% auto;
+    padding: 30px;
+    width: 60%;
+}
+
+.cerrar {
+    cursor: pointer;
 }
