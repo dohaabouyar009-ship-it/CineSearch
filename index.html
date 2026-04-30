@@ -9,14 +9,15 @@
 <body>
 
 <header>
-    <img src="logo.svg" alt="CineSearch" id="logo">
+    <img src="logo.svg" id="logo">
 
     <span id="btnFavoritos" onclick="verFavoritos()">🤍</span>
+
     <button onclick="abrirLogin()" id="btnLogin">Login</button>
 </header>
 
 <div class="buscador">
-    <input type="text" id="search" placeholder="Busca una peli o serie...">
+    <input type="text" id="search" placeholder="Busca una peli..." onkeydown="if(event.key==='Enter') buscar()">
     <button onclick="buscar()">Buscar 🔎</button>
 </div>
 
@@ -34,7 +35,7 @@
 <div id="loginModal" class="modal">
     <div class="modal-content">
         <span onclick="cerrarLogin()" class="cerrar">✖</span>
-        <h2>Iniciar sesión</h2>
+        <h2>Login</h2>
         <input type="email" id="email" placeholder="Email"><br><br>
         <input type="password" id="password" placeholder="Contraseña"><br><br>
         <button onclick="login()">Entrar</button>
@@ -46,7 +47,7 @@
 <div id="favoritosModal" class="modal">
     <div class="modal-content">
         <span onclick="cerrarFavoritos()" class="cerrar">✖</span>
-        <h2>❤️ Tus favoritos</h2>
+        <h2>❤️ Favoritos</h2>
         <div id="listaFavoritos"></div>
     </div>
 </div>
@@ -58,12 +59,9 @@
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyDImXOKqLRBH58wrEaIkG93j4nYg5mt9Uw",
-  authDomain: "cinesearch-c70c1.firebaseapp.com",
-  projectId: "cinesearch-c70c1",
-  storageBucket: "cinesearch-c70c1.firebasestorage.app",
-  messagingSenderId: "810716929909",
-  appId: "1:810716929909:web:f86de776e63e080f0f7d3c"
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_AUTH_DOMAIN",
+  projectId: "TU_PROJECT_ID",
 };
 
 firebase.initializeApp(firebaseConfig);
