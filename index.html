@@ -1,23 +1,32 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CineSearch</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineSearch</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header>
     <img src="logo.svg" id="logo">
 
-    <span id="btnFavoritos" onclick="verFavoritos()">🤍</span>
+    <div class="header-right">
+        <span id="btnFavoritos" onclick="verFavoritos()">🤍</span>
 
-    <button onclick="abrirLogin()" id="btnLogin">Login</button>
+        <button id="btnLogin" onclick="abrirLogin()">Login</button>
+
+        <div id="avatar" onclick="toggleMenu()" style="display:none"></div>
+    </div>
+
+    <div id="menuUser" class="menu-user">
+        <p id="userEmail"></p>
+        <button onclick="cerrarSesion()">Cerrar sesión</button>
+    </div>
 </header>
 
 <div class="buscador">
-    <input type="text" id="search" placeholder="Busca una peli..." onkeydown="if(event.key==='Enter') buscar()">
+    <input type="text" id="search" placeholder="Busca una película..." onkeydown="if(event.key==='Enter') buscar()">
     <button onclick="buscar()">Buscar 🔎</button>
 </div>
 
@@ -35,7 +44,7 @@
 <div id="loginModal" class="modal">
     <div class="modal-content">
         <span onclick="cerrarLogin()" class="cerrar">✖</span>
-        <h2>Login</h2>
+        <h2>Iniciar sesión</h2>
         <input type="email" id="email" placeholder="Email"><br><br>
         <input type="password" id="password" placeholder="Contraseña"><br><br>
         <button onclick="login()">Entrar</button>
@@ -52,18 +61,16 @@
     </div>
 </div>
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_AUTH_DOMAIN",
-  projectId: "TU_PROJECT_ID",
+  apiKey: "AIzaSyDImXOKqLRBH58wrEaIkG93j4nYg5mt9Uw",
+  authDomain: "cinesearch-c70c1.firebaseapp.com",
+  projectId: "cinesearch-c70c1"
 };
-
 firebase.initializeApp(firebaseConfig);
 </script>
 

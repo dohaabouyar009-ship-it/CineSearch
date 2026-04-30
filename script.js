@@ -1,143 +1,138 @@
 const apiKey = "de78d773b36e035ae311fb891704fbfa";
 
-// 🔍 MOSTRAR PELIS
-function mostrarPeliculas(peliculas) {
-    const contenedor = document.getElementById("resultados");
-    contenedor.innerHTML = "";
+// AUTH
+firebase.auth().onAuthStateChanged(user => {
+    const btn = document.getElementById("btnLogin");
+    const avatar = document.getElementById("avatar");
 
-    if (!peliculas.length) {
-        contenedor.innerHTML = "No hay resultados";
-        return;
+    if(user){
+        btn.style.display="none";
+        avatar.style.display="flex";
+        avatar.innerText = user.email[0].toUpperCase();
+        document.getElementById("userEmail").innerText = user.email;
+    }else{
+        btn.style.display="block";
+        avatar.style.display="none";
     }
+});
 
-    peliculas.forEach(peli => {
-        let poster = peli.poster_path
-            ? `https://image.tmdb.org/t/p/w500${peli.poster_path}`
-            : "";
+function toggleMenu(){
+    const menu = document.getElementById("menuUser");
+    menu.style.display = menu.style.display==="block"?"none":"block";
+}
 
-        contenedor.innerHTML += `
-            <div class="pelicula">
-                <span class="corazon" onclick="toggleFavorito(event, ${peli.id}, '${peli.title}', this)">🤍</span>
-                <div onclick="verDetalle(${peli.id})">
-                    <img src="${poster}">
-                    <h3>${peli.title}</h3>
-                </div>
+function cerrarSesion(){
+    firebase.auth().signOut();
+}
+
+// LOGIN
+function abrirLogin(){ loginModal.style.display="block"; }
+function cerrarLogin(){ loginModal.style.display="none"; }
+
+function registro(){
+    firebase.auth().createUserWithEmailAndPassword(email.value,password.value)
+    .then(()=>cerrarLogin());
+}
+
+function login(){
+    firebase.auth().signInWithEmailAndPassword(email.value,password.value)
+    .then(()=>cerrarLogin());
+}
+
+// BUSCAR
+function buscar(){
+    fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${search.value}&language=es-ES`)
+    .then(r=>r.json())
+    .then(d=>mostrarPeliculas(d.results));
+}
+
+// MOSTRAR
+function mostrarPeliculas(pelis){
+    resultados.innerHTML="";
+    pelis.forEach(p=>{
+        let poster = p.poster_path ? `https://image.tmdb.org/t/p/w500${p.poster_path}`:"";
+
+        resultados.innerHTML+=`
+        <div class="pelicula">
+            <span class="corazon" onclick="toggleFavorito(event,${p.id},'${p.title}',this)">🤍</span>
+            <div onclick="verDetalle(${p.id})">
+                <img src="${poster}">
+                <p>${p.title}</p>
             </div>
-        `;
+        </div>`;
     });
 }
 
-// 🔎 BUSCAR (SOLO PELÍCULAS Y EN ESPAÑOL)
-function buscar() {
-    const query = document.getElementById("search").value;
-    if (!query) return;
-
-    fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}&language=es-ES`)
-        .then(res => res.json())
-        .then(data => mostrarPeliculas(data.results));
-}
-
-// 🎬 DETALLE
-function verDetalle(id) {
+// DETALLE PRO
+function verDetalle(id){
     fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES&append_to_response=credits`)
-        .then(res => res.json())
-        .then(peli => {
-            document.getElementById("detalle").innerHTML = `
-                <h2>${peli.title}</h2>
-                <p>${peli.overview}</p>
-            `;
-            document.getElementById("modal").style.display = "block";
-        });
+    .then(r=>r.json())
+    .then(p=>{
+        let actores = p.credits.cast.slice(0,5).map(a=>a.name).join(", ");
+        let estrellas = "⭐".repeat(Math.round(p.vote_average/2));
+
+        detalle.innerHTML=`
+            <img src="https://image.tmdb.org/t/p/w500${p.poster_path}">
+            <div>
+                <h2>${p.title}</h2>
+                <p><b>Año:</b> ${p.release_date}</p>
+                <p><b>Actores:</b> ${actores}</p>
+                <p><b>Nota:</b> ${estrellas}</p>
+                <p>${p.overview}</p>
+            </div>
+        `;
+        modal.style.display="block";
+    });
 }
 
-function cerrarModal() {
-    document.getElementById("modal").style.display = "none";
-}
+function cerrarModal(){ modal.style.display="none"; }
 
-// 🔐 LOGIN
-function registro() {
-    firebase.auth().createUserWithEmailAndPassword(
-        email.value, password.value
-    );
-}
+// FAVORITOS
+function toggleFavorito(e,id,titulo,el){
+    e.stopPropagation();
+    let user=firebase.auth().currentUser;
+    if(!user){ abrirLogin(); return; }
 
-function login() {
-    firebase.auth().signInWithEmailAndPassword(
-        email.value, password.value
-    ).then(() => cerrarLogin());
-}
-
-function abrirLogin() {
-    document.getElementById("loginModal").style.display = "block";
-}
-
-function cerrarLogin() {
-    document.getElementById("loginModal").style.display = "none";
-}
-
-// ❤️ FAVORITOS
-function toggleFavorito(event, id, titulo, el) {
-    event.stopPropagation();
-
-    const user = firebase.auth().currentUser;
-    if (!user) return alert("Haz login");
-
-    const db = firebase.firestore();
+    let db=firebase.firestore();
 
     db.collection("favoritos")
-    .where("user", "==", user.uid)
-    .where("peliculaId", "==", id)
+    .where("user","==",user.uid)
+    .where("peliculaId","==",id)
     .get()
-    .then(snapshot => {
-        if (!snapshot.empty) {
-            snapshot.forEach(doc => db.collection("favoritos").doc(doc.id).delete());
-            el.innerText = "🤍";
-        } else {
-            db.collection("favoritos").add({
-                user: user.uid,
-                peliculaId: id,
-                titulo: titulo
-            });
-            el.innerText = "❤️";
+    .then(s=>{
+        if(!s.empty){
+            s.forEach(doc=>db.collection("favoritos").doc(doc.id).delete());
+            el.innerText="🤍";
+        }else{
+            db.collection("favoritos").add({user:user.uid,peliculaId:id,titulo});
+            el.innerText="❤️";
         }
     });
 }
 
-// 📂 VER FAVORITOS
-function verFavoritos() {
-    const user = firebase.auth().currentUser;
-    if (!user) return alert("Login primero");
+function verFavoritos(){
+    let user=firebase.auth().currentUser;
+    if(!user){ abrirLogin(); return; }
 
-    const cont = document.getElementById("listaFavoritos");
-    cont.innerHTML = "";
+    listaFavoritos.innerHTML="";
 
     firebase.firestore().collection("favoritos")
-    .where("user", "==", user.uid)
+    .where("user","==",user.uid)
     .get()
-    .then(snapshot => {
-        snapshot.forEach(doc => {
-            cont.innerHTML += `
-                <p>${doc.data().titulo}
-                <button onclick="eliminarFavorito('${doc.id}')">❌</button></p>
-            `;
+    .then(s=>{
+        s.forEach(doc=>{
+            listaFavoritos.innerHTML+=`<p>${doc.data().titulo}</p>`;
         });
     });
 
-    document.getElementById("favoritosModal").style.display = "block";
+    favoritosModal.style.display="block";
 }
 
-function cerrarFavoritos() {
-    document.getElementById("favoritosModal").style.display = "none";
-}
+function cerrarFavoritos(){ favoritosModal.style.display="none"; }
 
-function eliminarFavorito(id) {
-    firebase.firestore().collection("favoritos").doc(id).delete();
-    verFavoritos();
-}
-
-// 🚀 INICIO
-window.onload = () => {
-    fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=es-ES`)
-        .then(res => res.json())
-        .then(data => mostrarPeliculas(data.results));
+// INICIO
+window.onload=()=>{
+fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=es-ES`)
+.then(r=>r.json())
+.then(d=>mostrarPeliculas(d.results));
 };
