@@ -1,138 +1,141 @@
 const apiKey = "de78d773b36e035ae311fb891704fbfa";
 
-// AUTH
-firebase.auth().onAuthStateChanged(user => {
-    const btn = document.getElementById("btnLogin");
-    const avatar = document.getElementById("avatar");
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "...",
+  projectId: "...",
+};
 
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* LOGIN STATE */
+auth.onAuthStateChanged(user=>{
     if(user){
-        btn.style.display="none";
-        avatar.style.display="flex";
-        avatar.innerText = user.email[0].toUpperCase();
-        document.getElementById("userEmail").innerText = user.email;
+        btnLogin.style.display="none";
+        avatarBtn.style.display="flex";
+        avatarInitial.textContent=user.email[0].toUpperCase();
+        menuEmail.textContent=user.email;
     }else{
-        btn.style.display="block";
-        avatar.style.display="none";
+        btnLogin.style.display="block";
+        avatarBtn.style.display="none";
     }
 });
 
-function toggleMenu(){
-    const menu = document.getElementById("menuUser");
-    menu.style.display = menu.style.display==="block"?"none":"block";
-}
-
-function cerrarSesion(){
-    firebase.auth().signOut();
-}
-
-// LOGIN
-function abrirLogin(){ loginModal.style.display="block"; }
-function cerrarLogin(){ loginModal.style.display="none"; }
-
-function registro(){
-    firebase.auth().createUserWithEmailAndPassword(email.value,password.value)
-    .then(()=>cerrarLogin());
-}
-
-function login(){
-    firebase.auth().signInWithEmailAndPassword(email.value,password.value)
-    .then(()=>cerrarLogin());
-}
-
-// BUSCAR
+/* BUSCAR */
 function buscar(){
-    fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${search.value}&language=es-ES`)
+    const q=document.getElementById("search").value;
+
+    fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${q}`)
     .then(r=>r.json())
     .then(d=>mostrarPeliculas(d.results));
 }
 
-// MOSTRAR
 function mostrarPeliculas(pelis){
-    resultados.innerHTML="";
-    pelis.forEach(p=>{
-        let poster = p.poster_path ? `https://image.tmdb.org/t/p/w500${p.poster_path}`:"";
+    const cont=document.getElementById("resultados");
+    cont.innerHTML="";
 
-        resultados.innerHTML+=`
-        <div class="pelicula">
-            <span class="corazon" onclick="toggleFavorito(event,${p.id},'${p.title}',this)">🤍</span>
-            <div onclick="verDetalle(${p.id})">
-                <img src="${poster}">
-                <p>${p.title}</p>
-            </div>
-        </div>`;
+    pelis.forEach(p=>{
+        const div=document.createElement("div");
+        div.className="pelicula";
+
+        div.innerHTML=`
+        <img src="https://image.tmdb.org/t/p/w200${p.poster_path}">
+        <p>${p.title}</p>
+        `;
+
+        div.onclick=()=>verDetalle(p.id);
+
+        cont.appendChild(div);
     });
 }
 
-// DETALLE PRO
+/* DETALLE */
 function verDetalle(id){
-    fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES&append_to_response=credits`)
+    fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&append_to_response=credits`)
     .then(r=>r.json())
     .then(p=>{
-        let actores = p.credits.cast.slice(0,5).map(a=>a.name).join(", ");
-        let estrellas = "⭐".repeat(Math.round(p.vote_average/2));
 
-        detalle.innerHTML=`
-            <img src="https://image.tmdb.org/t/p/w500${p.poster_path}">
+        document.getElementById("detalle").innerHTML=`
+        <div class="detalle">
+            <img src="https://image.tmdb.org/t/p/w300${p.poster_path}">
             <div>
                 <h2>${p.title}</h2>
-                <p><b>Año:</b> ${p.release_date}</p>
-                <p><b>Actores:</b> ${actores}</p>
-                <p><b>Nota:</b> ${estrellas}</p>
+                <p>⭐ ${p.vote_average}</p>
                 <p>${p.overview}</p>
             </div>
+        </div>
         `;
-        modal.style.display="block";
+
+        document.getElementById("modal").style.display="block";
     });
 }
 
-function cerrarModal(){ modal.style.display="none"; }
+function cerrarModal(){
+    modal.style.display="none";
+}
 
-// FAVORITOS
-function toggleFavorito(e,id,titulo,el){
-    e.stopPropagation();
-    let user=firebase.auth().currentUser;
-    if(!user){ abrirLogin(); return; }
+/* LOGIN */
+function abrirLogin(){
+    loginModal.style.display="block";
+}
 
-    let db=firebase.firestore();
+function cerrarLogin(){
+    loginModal.style.display="none";
+}
+
+function login(){
+    auth.signInWithEmailAndPassword(email.value,password.value)
+    .then(()=>cerrarLogin());
+}
+
+function registro(){
+    auth.createUserWithEmailAndPassword(email.value,password.value)
+    .then(()=>cerrarLogin());
+}
+
+/* USER MENU */
+function toggleUserMenu(){
+    userMenu.style.display=
+    userMenu.style.display==="block"?"none":"block";
+}
+
+function cerrarSesion(){
+    auth.signOut();
+}
+
+/* FAVORITOS */
+function verFavoritos(){
+    favoritosModal.style.display="block";
+
+    const user=auth.currentUser;
+    if(!user) return;
 
     db.collection("favoritos")
     .where("user","==",user.uid)
-    .where("peliculaId","==",id)
     .get()
-    .then(s=>{
-        if(!s.empty){
-            s.forEach(doc=>db.collection("favoritos").doc(doc.id).delete());
-            el.innerText="🤍";
-        }else{
-            db.collection("favoritos").add({user:user.uid,peliculaId:id,titulo});
-            el.innerText="❤️";
-        }
-    });
-}
+    .then(snap=>{
+        listaFavoritos.innerHTML="";
 
-function verFavoritos(){
-    let user=firebase.auth().currentUser;
-    if(!user){ abrirLogin(); return; }
+        snap.forEach(doc=>{
+            const d=doc.data();
 
-    listaFavoritos.innerHTML="";
-
-    firebase.firestore().collection("favoritos")
-    .where("user","==",user.uid)
-    .get()
-    .then(s=>{
-        s.forEach(doc=>{
-            listaFavoritos.innerHTML+=`<p>${doc.data().titulo}</p>`;
+            listaFavoritos.innerHTML+=`
+            <div>
+                ${d.titulo}
+                <button onclick="eliminarFavorito('${doc.id}')">🗑</button>
+            </div>
+            `;
         });
     });
-
-    favoritosModal.style.display="block";
 }
 
-function cerrarFavoritos(){ favoritosModal.style.display="none"; }
+function eliminarFavorito(id){
+    db.collection("favoritos").doc(id).delete();
+}
 
-// INICIO
-window.onload=()=>{
-fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=es-ES`)
-.then(r=>r.json())
-.then(d=>mostrarPeliculas(d.results));
-};
+function cerrarFavoritos(){
+    favoritosModal.style.display="none";
+}

@@ -4,38 +4,44 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CineSearch</title>
+
 <link rel="stylesheet" href="style.css">
+
 </head>
 <body>
 
 <header>
     <img src="logo.svg" id="logo">
 
-    <div class="header-right">
-        <span id="btnFavoritos" onclick="verFavoritos()">🤍</span>
+    <div class="header-actions">
+        <span id="btnFavoritos" onclick="verFavoritos()">❤️</span>
 
-        <button id="btnLogin" onclick="abrirLogin()">Login</button>
+        <div id="avatarWrapper">
+            <button id="btnLogin" onclick="abrirLogin()">Login</button>
 
-        <div id="avatar" onclick="toggleMenu()" style="display:none"></div>
+            <div id="avatarBtn" onclick="toggleUserMenu()" style="display:none">
+                <span id="avatarInitial"></span>
+            </div>
+        </div>
     </div>
 
-    <div id="menuUser" class="menu-user">
-        <p id="userEmail"></p>
+    <div id="userMenu" class="user-menu">
+        <p id="menuEmail"></p>
         <button onclick="cerrarSesion()">Cerrar sesión</button>
     </div>
 </header>
 
 <div class="buscador">
     <input type="text" id="search" placeholder="Busca una película..." onkeydown="if(event.key==='Enter') buscar()">
-    <button onclick="buscar()">Buscar 🔎</button>
+    <button onclick="buscar()">🔍 Buscar</button>
 </div>
 
 <div id="resultados"></div>
 
-<!-- MODAL DETALLE -->
+<!-- DETALLE -->
 <div id="modal" class="modal">
     <div class="modal-content">
-        <span onclick="cerrarModal()" class="cerrar">✖</span>
+        <span class="cerrar" onclick="cerrarModal()">X</span>
         <div id="detalle"></div>
     </div>
 </div>
@@ -43,19 +49,18 @@
 <!-- LOGIN -->
 <div id="loginModal" class="modal">
     <div class="modal-content">
-        <span onclick="cerrarLogin()" class="cerrar">✖</span>
-        <h2>Iniciar sesión</h2>
-        <input type="email" id="email" placeholder="Email"><br><br>
-        <input type="password" id="password" placeholder="Contraseña"><br><br>
+        <span class="cerrar" onclick="cerrarLogin()">X</span>
+        <input id="email" placeholder="Email">
+        <input id="password" type="password" placeholder="Password">
         <button onclick="login()">Entrar</button>
-        <button onclick="registro()">Registrarse</button>
+        <button onclick="registro()">Crear cuenta</button>
     </div>
 </div>
 
 <!-- FAVORITOS -->
 <div id="favoritosModal" class="modal">
     <div class="modal-content">
-        <span onclick="cerrarFavoritos()" class="cerrar">✖</span>
+        <span class="cerrar" onclick="cerrarFavoritos()">X</span>
         <h2>❤️ Favoritos</h2>
         <div id="listaFavoritos"></div>
     </div>
@@ -65,16 +70,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDImXOKqLRBH58wrEaIkG93j4nYg5mt9Uw",
-  authDomain: "cinesearch-c70c1.firebaseapp.com",
-  projectId: "cinesearch-c70c1"
-};
-firebase.initializeApp(firebaseConfig);
-</script>
-
 <script src="script.js"></script>
-
 </body>
 </html>
