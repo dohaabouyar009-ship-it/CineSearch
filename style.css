@@ -1,101 +1,310 @@
-body{
-    background:#000;
-    color:white;
-    font-family:Arial;
-    text-align:center;
+body {
+    margin: 0;
+    background: linear-gradient(to bottom, #000000, #1a1a1a);
+    color: white;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
 }
 
-#logo{
-    width:120px;
-    margin:20px;
+/* HEADER Y LOGO */
+header {
+    padding: 60px 20px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+#logo {
+    width: 550px;
+    height: auto;
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.3));
+    transition: transform 0.3s ease;
+}
+
+#logo:hover {
+    transform: scale(1.02);
 }
 
 /* BUSCADOR */
-.buscador{
-    margin:30px;
+.buscador {
+    margin: 30px;
 }
 
-.buscador input{
-    width:400px;
-    padding:12px;
-    border-radius:30px;
-    border:none;
+input {
+    padding: 15px;
+    width: 300px;
+    border-radius: 25px;
+    border: none;
+    outline: none;
+    font-size: 16px;
 }
 
-.buscador button{
-    padding:12px 20px;
-    border-radius:30px;
-    border:none;
-    background:gold;
-    cursor:pointer;
+button {
+    padding: 15px 25px;
+    background: #FFD700;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    transition: 0.3s;
 }
 
-/* GRID */
-#resultados{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
+button:hover {
+    transform: scale(1.1);
+    background: #e6c200;
 }
 
-.pelicula{
-    margin:10px;
-    cursor:pointer;
+/* GRID DE PELÍCULAS */
+#resultados {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
 }
 
-.pelicula img{
-    width:150px;
-    border-radius:10px;
+/* TARJETAS */
+.pelicula {
+    width: 200px;
+    margin: 15px;
+    background: #111;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: 0.3s;
+    cursor: pointer;
+    border: 1px solid transparent;
+    position: relative;
+}
+
+.pelicula:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.5);
+    border: 1px solid #FFD700;
+}
+
+.pelicula img {
+    width: 100%;
+    display: block;
+}
+
+.pelicula h3 {
+    margin: 10px;
+    font-size: 1rem;
+}
+
+/* CORAZÓN EN TARJETAS */
+.corazon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 22px;
+    cursor: pointer;
+    color: white;
+    z-index: 10;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    transition: transform 0.2s;
+}
+
+.corazon:hover {
+    transform: scale(1.2);
+}
+
+.corazon.activo {
+    color: #ff0000;
 }
 
 /* MODAL */
-.modal{
-    display:none;
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.8);
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 1000;
 }
 
-.modal-content{
-    background:#222;
-    margin:10% auto;
-    padding:20px;
-    width:80%;
-    border-radius:10px;
+.modal-content {
+    background: #1a1a1a;
+    margin: 5% auto;
+    padding: 30px;
+    width: 60%;
+    border-radius: 15px;
+    color: white;
+    text-align: left;
+    position: relative;
+    border: 1px solid #333;
 }
 
-/* DETALLE */
-.detalle{
-    display:flex;
-    gap:20px;
-    text-align:left;
+.cerrar {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 30px;
+    cursor: pointer;
+    color: #FFD700;
 }
 
-.detalle img{
-    width:200px;
+/* BOTONES HEADER */
+#btnLogin {
+    position: absolute;
+    top: 20px;
+    right: 20px;
 }
 
-/* AVATAR */
-#avatarBtn{
-    background:gold;
-    width:40px;
-    height:40px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border:2px solid white;
-    cursor:pointer;
+#btnFav {
+    position: absolute;
+    top: 20px;
+    right: 80px;
+    background: transparent;
+    font-size: 22px;
 }
 
-/* USER MENU */
-.user-menu{
-    display:none;
-    position:absolute;
-    right:20px;
-    background:#222;
-    padding:10px;
-    border-radius:10px;
+/* PERFIL CIRCULAR Y DROPDOWN */
+#profileContainer {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+#btnLogin {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: #FFD700;
+    color: black;
+    border: 2px solid #FFD700;
+    overflow: hidden;
+}
+
+#btnLogin img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 55px;
+    right: 0;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    min-width: 220px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    z-index: 100;
+    text-align: center;
+}
+
+.dropdown-menu.mostrar {
+    display: block;
+}
+
+#dropdownAvatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #FFD700;
+    margin-bottom: 10px;
+}
+
+#dropdownEmail {
+    color: #ccc;
+    font-size: 14px;
+    margin: 10px 0;
+    word-break: break-all;
+}
+
+.dropdown-menu button {
+    margin-top: 10px;
+    width: 100%;
+    font-size: 14px;
+    padding: 10px;
+}
+
+/* DETALLE DE PELÍCULA EN MODAL */
+.detalle-contenido {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.detalle-poster {
+    flex-shrink: 0;
+}
+
+.detalle-poster img {
+    width: 300px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.detalle-info h2 {
+    margin-top: 0;
+    color: #FFD700;
+}
+
+.detalle-info p {
+    margin: 10px 0;
+    line-height: 1.6;
+}
+
+/* LISTA DE FAVORITOS */
+.fav-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    margin: 10px 0;
+    background: #111;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+.fav-item img {
+    width: 60px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.fav-item span {
+    flex-grow: 1;
+    font-size: 16px;
+}
+
+.fav-item button {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .detalle-contenido {
+        flex-direction: column;
+    }
+    
+    .detalle-poster img {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .modal-content {
+        width: 90%;
+        margin: 10% auto;
+    }
+    
+    #logo {
+        width: 300px;
+    }
 }

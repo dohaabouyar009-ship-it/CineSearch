@@ -1,47 +1,40 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CineSearch</title>
-
-<link rel="stylesheet" href="style.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineSearch</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header>
     <img src="logo.svg" id="logo">
 
-    <div class="header-actions">
-        <span id="btnFavoritos" onclick="verFavoritos()">❤️</span>
-
-        <div id="avatarWrapper">
-            <button id="btnLogin" onclick="abrirLogin()">Login</button>
-
-            <div id="avatarBtn" onclick="toggleUserMenu()" style="display:none">
-                <span id="avatarInitial"></span>
-            </div>
+    <button onclick="verFavoritos()" id="btnFav">❤️</button>
+    
+    <!-- NUEVO: Contenedor del perfil con dropdown -->
+    <div id="profileContainer">
+        <button onclick="abrirLogin()" id="btnLogin">Login</button>
+        <div id="profileDropdown" class="dropdown-menu">
+            <img id="dropdownAvatar" src="" alt="Foto de perfil">
+            <p id="dropdownEmail"></p>
+            <button onclick="logout()">Cerrar sesión</button>
         </div>
-    </div>
-
-    <div id="userMenu" class="user-menu">
-        <p id="menuEmail"></p>
-        <button onclick="cerrarSesion()">Cerrar sesión</button>
     </div>
 </header>
 
 <div class="buscador">
-    <input type="text" id="search" placeholder="Busca una película..." onkeydown="if(event.key==='Enter') buscar()">
-    <button onclick="buscar()">🔍 Buscar</button>
+    <input type="text" id="search" placeholder="Busca una peli o serie...">
+    <button onclick="buscar()">Buscar 🔎</button>
 </div>
 
 <div id="resultados"></div>
 
-<!-- DETALLE -->
+<!-- MODAL DETALLE -->
 <div id="modal" class="modal">
     <div class="modal-content">
-        <span class="cerrar" onclick="cerrarModal()">X</span>
+        <span onclick="cerrarModal()" class="cerrar">✖</span>
         <div id="detalle"></div>
     </div>
 </div>
@@ -49,27 +42,40 @@
 <!-- LOGIN -->
 <div id="loginModal" class="modal">
     <div class="modal-content">
-        <span class="cerrar" onclick="cerrarLogin()">X</span>
-        <input id="email" placeholder="Email">
-        <input id="password" type="password" placeholder="Password">
+        <span onclick="cerrarLogin()" class="cerrar">✖</span>
+        <h2>Login</h2>
+        <input type="email" id="email" placeholder="Email"><br><br>
+        <input type="password" id="password" placeholder="Contraseña"><br><br>
         <button onclick="login()">Entrar</button>
-        <button onclick="registro()">Crear cuenta</button>
+        <button onclick="registro()">Registrarse</button>
     </div>
 </div>
 
 <!-- FAVORITOS -->
-<div id="favoritosModal" class="modal">
+<div id="favModal" class="modal">
     <div class="modal-content">
-        <span class="cerrar" onclick="cerrarFavoritos()">X</span>
+        <span onclick="cerrarFav()" class="cerrar">✖</span>
         <h2>❤️ Favoritos</h2>
-        <div id="listaFavoritos"></div>
+        <div id="listaFav"></div>
     </div>
 </div>
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
+<script>
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_DOMINIO",
+  projectId: "TU_ID",
+};
+
+firebase.initializeApp(firebaseConfig);
+</script>
+
 <script src="script.js"></script>
+
 </body>
 </html>
