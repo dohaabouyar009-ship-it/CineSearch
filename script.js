@@ -1,18 +1,15 @@
 const apiKey = "de78d773b36e035ae311fb891704fbfa";
 let favoritosCache = [];
+let generoActual = 0; // 0 = populares
 
-// Función para obtener inicial válida (letra, no número)
 function getInicial(email) {
     if (!email) return "U";
-    // Buscar la primera letra del email (antes del @)
     const nombre = email.split('@')[0];
-    // Buscar primera letra válida (a-z, A-Z)
     for (let char of nombre) {
         if (/[a-zA-Z]/.test(char)) {
             return char.toUpperCase();
         }
     }
-    // Si no hay letras, usar primera letra del dominio o "U"
     const dominio = email.split('@')[1] || "";
     for (let char of dominio) {
         if (/[a-zA-Z]/.test(char)) {
@@ -22,10 +19,40 @@ function getInicial(email) {
     return "U";
 }
 
+// NUEVO: Filtrar por género
+function filtrarPorGenero(generoId) {
+    // Actualizar botón activo
+    document.querySelectorAll('.genero-btn').forEach(btn => {
+        btn.classList.remove('activo');
+    });
+    event.target.classList.add('activo');
+    
+    generoActual = generoId;
+    
+    if (generoId === 0) {
+        // Populares
+        cargarPopulares();
+    } else {
+        // Películas por género
+        fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${generoId}&language=es-ES&sort_by=popularity.desc`)
+            .then(res => res.json())
+            .then(data => mostrarPeliculas(data.results || []))
+            .catch(err => {
+                console.error("Error filtrando género:", err);
+                alert("Error al cargar películas de este género");
+            });
+    }
+}
+
 // 🔍 MOSTRAR PELIS
 function mostrarPeliculas(peliculas) {
     const contenedor = document.getElementById("resultados");
     contenedor.innerHTML = "";
+
+    if (!peliculas || peliculas.length === 0) {
+        contenedor.innerHTML = "<p style='width:100%; padding: 40px; font-size: 18px; color: #888;'>No se encontraron películas 😕</p>";
+        return;
+    }
 
     peliculas.forEach(peli => {
         let poster = peli.poster_path
@@ -61,13 +88,18 @@ function buscar() {
     const query = document.getElementById("search").value.trim();
     if (!query) return;
 
+    // Quitar activo de géneros cuando se busca
+    document.querySelectorAll('.genero-btn').forEach(btn => {
+        btn.classList.remove('activo');
+    });
+
     fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}&language=es-ES`)
         .then(res => res.json())
         .then(data => mostrarPeliculas(data.results || []))
         .catch(err => console.error("Error buscando:", err));
 }
 
-// 🎬 DETALLE CON POSTER + PLATAFORMAS (mejorado)
+// 🎬 DETALLE CON POSTER + PLATAFORMAS
 function verDetalle(id) {
     const detallePromise = fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES&append_to_response=credits`)
         .then(res => res.json());
@@ -84,11 +116,9 @@ function verDetalle(id) {
                 ? `https://image.tmdb.org/t/p/w500${peli.poster_path}`
                 : "https://via.placeholder.com/300x450?text=Sin+Poster";
 
-            // OBTENER PLATAFORMAS - mejorado con más países y fallback
             let plataformasHTML = "";
             const results = providersData.results || {};
             
-            // Orden de países a buscar: ES, US, MX, AR, GB, FR, DE, IT
             const paises = ['ES', 'US', 'MX', 'AR', 'GB', 'FR', 'DE', 'IT'];
             let proveedoresEncontrados = null;
             let paisEncontrado = "";
@@ -101,7 +131,6 @@ function verDetalle(id) {
                 }
             }
             
-            // Si no hay flatrate, buscar buy o rent
             if (!proveedoresEncontrados) {
                 for (let pais of paises) {
                     if (results[pais]) {
@@ -134,7 +163,6 @@ function verDetalle(id) {
                     </div>
                 `;
             } else {
-                // Si no hay datos de streaming, mostrar mensaje más útil
                 const fechaEstreno = peli.release_date ? new Date(peli.release_date) : null;
                 const hoy = new Date();
                 const esEstreno = fechaEstreno && fechaEstreno > hoy;
@@ -188,7 +216,7 @@ function cerrarModal() {
     document.body.style.overflow = "auto";
 }
 
-// ❤️ FAVORITOS - CORREGIDO
+// ❤️ FAVORITOS
 function toggleFavorito(event, id, titulo, posterPath) {
     event.stopPropagation();
 
@@ -208,7 +236,6 @@ function toggleFavorito(event, id, titulo, posterPath) {
         .get()
         .then(snapshot => {
             if (!snapshot.empty) {
-                // Eliminar
                 snapshot.forEach(doc => {
                     db.collection("favoritos").doc(doc.id).delete();
                 });
@@ -217,7 +244,6 @@ function toggleFavorito(event, id, titulo, posterPath) {
                 corazonElem.classList.remove("activo");
                 favoritosCache = favoritosCache.filter(f => f.peliculaId !== id);
             } else {
-                // Añadir - ASEGURAR que posterPath se guarda correctamente
                 const posterParaGuardar = posterPath ? String(posterPath).trim() : '';
                 
                 db.collection("favoritos").add({
@@ -243,7 +269,7 @@ function toggleFavorito(event, id, titulo, posterPath) {
         });
 }
 
-// 📂 VER FAVORITOS - CORREGIDO con recuperación de imágenes
+// 📂 VER FAVORITOS
 function verFavoritos() {
     const user = firebase.auth().currentUser;
     if (!user) {
@@ -269,7 +295,6 @@ function verFavoritos() {
                 return;
             }
 
-            // Recopilar todos los favoritos
             const favs = [];
             snapshot.forEach(doc => {
                 let peli = doc.data();
@@ -278,7 +303,6 @@ function verFavoritos() {
                 favoritosCache.push(peli);
             });
 
-            // Renderizar cada favorito
             favs.forEach(peli => {
                 renderFavItem(peli, cont);
             });
@@ -292,9 +316,7 @@ function verFavoritos() {
         });
 }
 
-// Función para renderizar un item de favorito (con recuperación de imagen si falta)
 function renderFavItem(peli, contenedor) {
-    // Intentar construir URL de imagen
     let posterUrl = null;
     
     if (peli.posterPath && peli.posterPath.trim() !== "") {
@@ -306,9 +328,7 @@ function renderFavItem(peli, contenedor) {
         }
     }
     
-    // Si no hay posterPath, intentar recuperar de TMDB
     if (!posterUrl) {
-        // Mostrar placeholder temporal y luego intentar recuperar
         contenedor.innerHTML += crearFavHTML(peli, null);
         recuperarPosterFavorito(peli, contenedor);
         return;
@@ -317,7 +337,6 @@ function renderFavItem(peli, contenedor) {
     contenedor.innerHTML += crearFavHTML(peli, posterUrl);
 }
 
-// Crear HTML del favorito
 function crearFavHTML(peli, posterUrl) {
     const tituloEscapado = peli.titulo.replace(/'/g, "\\'");
     
@@ -342,23 +361,19 @@ function crearFavHTML(peli, posterUrl) {
     }
 }
 
-// Intentar recuperar poster de TMDB si falta
 function recuperarPosterFavorito(peli, contenedor) {
     fetch(`https://api.themoviedb.org/3/movie/${peli.peliculaId}?api_key=${apiKey}&language=es-ES`)
         .then(res => res.json())
         .then(data => {
             if (data.poster_path) {
-                // Actualizar en Firestore
                 const db = firebase.firestore();
                 db.collection("favoritos").doc(peli.docId).update({
                     posterPath: data.poster_path
                 });
                 
-                // Actualizar en cache
                 const favEnCache = favoritosCache.find(f => f.docId === peli.docId);
                 if (favEnCache) favEnCache.posterPath = data.poster_path;
                 
-                // Actualizar en la UI si el modal está abierto
                 const favElem = document.getElementById(`fav-${peli.docId}`);
                 if (favElem) {
                     const placeholder = favElem.querySelector('.fav-poster-placeholder');
@@ -389,7 +404,8 @@ function eliminarFav(docId) {
             
             const searchValue = document.getElementById("search").value;
             if (searchValue) buscar();
-            else cargarPopulares();
+            else if (generoActual === 0) cargarPopulares();
+            else filtrarPorGenero(generoActual);
         })
         .catch(err => {
             console.error("Error eliminando:", err);
@@ -486,14 +502,13 @@ document.addEventListener("click", (e) => {
     }
 });
 
-// Estado de autenticación - CORREGIDO: inicial válida
+// Estado de autenticación
 firebase.auth().onAuthStateChanged(user => {
     const btn = document.getElementById("btnLogin");
     const dropdownEmail = document.getElementById("dropdownEmail");
     const dropdownAvatar = document.getElementById("dropdownAvatar");
 
     if (user) {
-        // Usar función getInicial para obtener letra válida
         const inicial = getInicial(user.email);
         const photoURL = user.photoURL;
         
@@ -501,7 +516,6 @@ firebase.auth().onAuthStateChanged(user => {
             btn.innerHTML = `<img src="${photoURL}" alt="Perfil">`;
             dropdownAvatar.src = photoURL;
         } else {
-            // Generar avatar con la inicial correcta (no número)
             let avatarUrl = `https://ui-avatars.com/api/?name=${inicial}&background=FFD700&color=000&size=128&bold=true&font-size=0.5`;
             btn.innerHTML = `<img src="${avatarUrl}" alt="Perfil">`;
             dropdownAvatar.src = avatarUrl;
@@ -532,7 +546,13 @@ function cargarFavoritosCache(userId) {
             
             const searchValue = document.getElementById("search").value;
             if (searchValue) buscar();
-            else cargarPopulares();
+            else if (generoActual === 0) cargarPopulares();
+            else {
+                // Recargar el género actual
+                fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${generoActual}&language=es-ES&sort_by=popularity.desc`)
+                    .then(res => res.json())
+                    .then(data => mostrarPeliculas(data.results || []));
+            }
         })
         .catch(err => console.error("Error cargando cache:", err));
 }
