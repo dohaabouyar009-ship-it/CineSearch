@@ -25,7 +25,6 @@ header {
     transform: scale(1.02);
 }
 
-/* NUEVO: MENÚ DE GÉNEROS */
 #menuGeneros {
     display: flex;
     justify-content: center;
@@ -188,6 +187,20 @@ button:hover {
 }
 
 #btnFav {
+    position: absolute;
+    top: 20px;
+    right: 130px;
+    background: transparent;
+    font-size: 22px;
+    padding: 10px;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#btnAmigos {
     position: absolute;
     top: 20px;
     right: 80px;
@@ -366,6 +379,109 @@ button:hover {
     font-style: italic;
 }
 
+/* AMIGOS */
+.amigos-buscar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.amigos-buscar input {
+    flex-grow: 1;
+}
+
+.amigo-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    margin: 10px 0;
+    background: #111;
+    border-radius: 10px;
+    border: 1px solid #333;
+    transition: 0.3s;
+}
+
+.amigo-item:hover {
+    border-color: #FFD700;
+}
+
+.amigo-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #FFD700;
+    flex-shrink: 0;
+}
+
+.amigo-info {
+    flex-grow: 1;
+}
+
+.amigo-info strong {
+    display: block;
+    color: #FFD700;
+    margin-bottom: 3px;
+}
+
+.amigo-info span {
+    font-size: 12px;
+    color: #888;
+}
+
+.amigo-item button {
+    padding: 8px 15px;
+    font-size: 13px;
+}
+
+.recomendacion-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    margin: 10px 0;
+    background: #111;
+    border-radius: 10px;
+    border: 1px solid #333;
+}
+
+.recomendacion-item img {
+    width: 50px;
+    height: 75px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.recomendacion-info {
+    flex-grow: 1;
+}
+
+.recomendacion-info strong {
+    color: #FFD700;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.recomendacion-info small {
+    color: #888;
+}
+
+.recomendacion-item button {
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+#listaAmigos h3, #listaRecomendaciones h3 {
+    color: #FFD700;
+    margin-top: 20px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+/* FAVORITOS */
 #listaFav {
     max-height: 400px;
     overflow-y: auto;
@@ -444,7 +560,7 @@ button:hover {
         width: 300px;
     }
     
-    .buscador {
+    .buscador, .amigos-buscar {
         flex-direction: column;
         align-items: center;
     }

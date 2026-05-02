@@ -12,8 +12,8 @@
     <img src="logo.svg" id="logo">
 
     <button onclick="verFavoritos()" id="btnFav">❤️</button>
+    <button onclick="verAmigos()" id="btnAmigos">👥</button>
     
-    <!-- Contenedor del perfil con dropdown -->
     <div id="profileContainer">
         <button onclick="abrirLogin()" id="btnLogin">Login</button>
         <div id="profileDropdown" class="dropdown-menu">
@@ -23,7 +23,7 @@
         </div>
     </div>
 </header>
-<!-- NUEVO: MENÚ DE GÉNEROS -->
+
 <nav id="menuGeneros">
     <button onclick="filtrarPorGenero(0)" class="genero-btn activo">🔥 Populares</button>
     <button onclick="filtrarPorGenero(28)" class="genero-btn">💥 Acción</button>
@@ -38,6 +38,7 @@
     <button onclick="filtrarPorGenero(80)" class="genero-btn">🔫 Crimen</button>
     <button onclick="filtrarPorGenero(14)" class="genero-btn">🧙 Fantasía</button>
 </nav>
+
 <div class="buscador">
     <input type="text" id="search" placeholder="Busca una peli o serie...">
     <button onclick="buscar()">Buscar 🔎</button>
@@ -74,7 +75,37 @@
     </div>
 </div>
 
-<!-- FIREBASE -->
+<!-- AMIGOS -->
+<div id="amigosModal" class="modal">
+    <div class="modal-content">
+        <span onclick="cerrarAmigos()" class="cerrar">✖</span>
+        <h2>👥 Amigos</h2>
+        
+        <div class="amigos-buscar">
+            <input type="email" id="buscarAmigo" placeholder="Email de tu amigo...">
+            <button onclick="buscarUsuario()">Buscar 🔎</button>
+        </div>
+        <div id="resultadoBusqueda"></div>
+        
+        <h3>Mis Amigos</h3>
+        <div id="listaAmigos"></div>
+        
+        <h3>📩 Recomendaciones recibidas</h3>
+        <div id="listaRecomendaciones"></div>
+    </div>
+</div>
+
+<!-- RECOMENDAR A AMIGO -->
+<div id="recomendarModal" class="modal">
+    <div class="modal-content">
+        <span onclick="cerrarRecomendar()" class="cerrar">✖</span>
+        <h2>🎬 Recomendar película</h2>
+        <p id="peliRecomendar"></p>
+        <h3>Selecciona un amigo:</h3>
+        <div id="listaAmigosRecomendar"></div>
+    </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>

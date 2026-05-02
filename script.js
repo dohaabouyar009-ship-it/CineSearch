@@ -1,6 +1,7 @@
 const apiKey = "de78d773b36e035ae311fb891704fbfa";
 let favoritosCache = [];
-let generoActual = 0; // 0 = populares
+let generoActual = 0;
+let peliculaParaRecomendar = null;
 
 function getInicial(email) {
     if (!email) return "U";
@@ -19,9 +20,7 @@ function getInicial(email) {
     return "U";
 }
 
-// NUEVO: Filtrar por género
 function filtrarPorGenero(generoId) {
-    // Actualizar botón activo
     document.querySelectorAll('.genero-btn').forEach(btn => {
         btn.classList.remove('activo');
     });
@@ -30,10 +29,8 @@ function filtrarPorGenero(generoId) {
     generoActual = generoId;
     
     if (generoId === 0) {
-        // Populares
         cargarPopulares();
     } else {
-        // Películas por género
         fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${generoId}&language=es-ES&sort_by=popularity.desc`)
             .then(res => res.json())
             .then(data => mostrarPeliculas(data.results || []))
@@ -44,7 +41,6 @@ function filtrarPorGenero(generoId) {
     }
 }
 
-// 🔍 MOSTRAR PELIS
 function mostrarPeliculas(peliculas) {
     const contenedor = document.getElementById("resultados");
     contenedor.innerHTML = "";
@@ -83,12 +79,10 @@ function mostrarPeliculas(peliculas) {
     });
 }
 
-// 🔎 BUSCAR
 function buscar() {
     const query = document.getElementById("search").value.trim();
     if (!query) return;
 
-    // Quitar activo de géneros cuando se busca
     document.querySelectorAll('.genero-btn').forEach(btn => {
         btn.classList.remove('activo');
     });
@@ -99,7 +93,6 @@ function buscar() {
         .catch(err => console.error("Error buscando:", err));
 }
 
-// 🎬 DETALLE CON POSTER + PLATAFORMAS
 function verDetalle(id) {
     const detallePromise = fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES&append_to_response=credits`)
         .then(res => res.json());
@@ -115,6 +108,13 @@ function verDetalle(id) {
             let poster = peli.poster_path
                 ? `https://image.tmdb.org/t/p/w500${peli.poster_path}`
                 : "https://via.placeholder.com/300x450?text=Sin+Poster";
+
+            // Guardar para recomendar
+            peliculaParaRecomendar = {
+                id: peli.id,
+                title: peli.title,
+                posterPath: peli.poster_path || ''
+            };
 
             let plataformasHTML = "";
             const results = providersData.results || {};
@@ -185,6 +185,11 @@ function verDetalle(id) {
                 `;
             }
 
+            // Botón recomendar solo si está logueado
+            const user = firebase.auth().currentUser;
+            const btnRecomendar = user ? 
+                `<button onclick="abrirRecomendar()" style="margin-top:15px; background:#ff6b6b; color:white;">🎬 Recomendar a un amigo</button>` : '';
+
             document.getElementById("detalle").innerHTML = `
                 <div class="detalle-contenido">
                     <div class="detalle-poster">
@@ -198,6 +203,7 @@ function verDetalle(id) {
                         <p><strong>⭐ Nota:</strong> ${peli.vote_average || "N/A"} / 10</p>
                         <p><strong>📝 Sinopsis:</strong> ${peli.overview || "Sin sinopsis disponible."}</p>
                         ${plataformasHTML}
+                        ${btnRecomendar}
                     </div>
                 </div>
             `;
@@ -214,6 +220,7 @@ function verDetalle(id) {
 function cerrarModal() {
     document.getElementById("modal").style.display = "none";
     document.body.style.overflow = "auto";
+    peliculaParaRecomendar = null;
 }
 
 // ❤️ FAVORITOS
@@ -269,7 +276,6 @@ function toggleFavorito(event, id, titulo, posterPath) {
         });
 }
 
-// 📂 VER FAVORITOS
 function verFavoritos() {
     const user = firebase.auth().currentUser;
     if (!user) {
@@ -420,6 +426,317 @@ function compartir(titulo) {
     });
 }
 
+// ========== SISTEMA DE AMIGOS ==========
+
+// Buscar usuario por email para añadir como amigo
+function buscarUsuario() {
+    const email = document.getElementById("buscarAmigo").value.trim();
+    const user = firebase.auth().currentUser;
+    
+    if (!user) {
+        alert("Debes iniciar sesión");
+        return;
+    }
+    
+    if (!email || email === user.email) {
+        alert("Introduce un email válido diferente al tuyo");
+        return;
+    }
+
+    const resultadoDiv = document.getElementById("resultadoBusqueda");
+    resultadoDiv.innerHTML = "<p>Buscando...</p>";
+
+    // Buscar en Firebase Auth no es posible directamente, así que buscamos en una colección de usuarios
+    // Primero verificar si ya existe en amigos
+    firebase.firestore().collection("amigos")
+        .where("user", "==", user.uid)
+        .where("amigoEmail", "==", email)
+        .get()
+        .then(snapshot => {
+            if (!snapshot.empty) {
+                resultadoDiv.innerHTML = "<p style='color: #FFD700;'>✅ Ya sois amigos</p>";
+                return;
+            }
+            
+            // Buscar si el usuario existe en nuestra base de datos de usuarios
+            firebase.firestore().collection("usuarios").where("email", "==", email).get()
+                .then(userSnapshot => {
+                    if (userSnapshot.empty) {
+                        resultadoDiv.innerHTML = "<p style='color: #ff6b6b;'>❌ Usuario no encontrado. Asegúrate de que tu amigo ya se ha registrado en CineSearch.</p>";
+                        return;
+                    }
+                    
+                    const usuarioEncontrado = userSnapshot.docs[0].data();
+                    const uidAmigo = userSnapshot.docs[0].id;
+                    
+                    resultadoDiv.innerHTML = `
+                        <div class="amigo-item">
+                            <img class="amigo-avatar" src="https://ui-avatars.com/api/?name=${getInicial(email)}&background=FFD700&color=000&size=128" alt="${email}">
+                            <div class="amigo-info">
+                                <strong>${email}</strong>
+                            </div>
+                            <button onclick="enviarSolicitud('${uidAmigo}', '${email}')">➕ Añadir</button>
+                        </div>
+                    `;
+                });
+        })
+        .catch(err => {
+            console.error("Error buscando usuario:", err);
+            resultadoDiv.innerHTML = "<p style='color: red;'>Error al buscar</p>";
+        });
+}
+
+// Enviar solicitud de amistad (o añadir directamente)
+function enviarSolicitud(uidAmigo, emailAmigo) {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const db = firebase.firestore();
+    
+    // Añadir amigo para el usuario actual
+    db.collection("amigos").add({
+        user: user.uid,
+        amigoId: uidAmigo,
+        amigoEmail: emailAmigo,
+        fecha: new Date()
+    }).then(() => {
+        // Añadir amigo para el otro usuario (bidireccional)
+        db.collection("amigos").add({
+            user: uidAmigo,
+            amigoId: user.uid,
+            amigoEmail: user.email,
+            fecha: new Date()
+        }).then(() => {
+            alert("✅ ¡Amigo añadido correctamente!");
+            document.getElementById("resultadoBusqueda").innerHTML = "";
+            document.getElementById("buscarAmigo").value = "";
+            cargarAmigos();
+        });
+    }).catch(err => {
+        console.error("Error añadiendo amigo:", err);
+        alert("Error al añadir amigo");
+    });
+}
+
+// Cargar lista de amigos
+function cargarAmigos() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const lista = document.getElementById("listaAmigos");
+    lista.innerHTML = "<p>Cargando amigos...</p>";
+
+    firebase.firestore().collection("amigos")
+        .where("user", "==", user.uid)
+        .get()
+        .then(snapshot => {
+            lista.innerHTML = "";
+            
+            if (snapshot.empty) {
+                lista.innerHTML = "<p style='color: #888;'>No tienes amigos aún. Busca usuarios por email para añadirlos.</p>";
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const amigo = doc.data();
+                const inicial = getInicial(amigo.amigoEmail);
+                
+                lista.innerHTML += `
+                    <div class="amigo-item">
+                        <img class="amigo-avatar" src="https://ui-avatars.com/api/?name=${inicial}&background=FFD700&color=000&size=128" alt="${amigo.amigoEmail}">
+                        <div class="amigo-info">
+                            <strong>${amigo.amigoEmail}</strong>
+                            <span>Amigo desde ${amigo.fecha ? new Date(amigo.fecha.toDate()).toLocaleDateString() : 'recientemente'}</span>
+                        </div>
+                        <button onclick="eliminarAmigo('${doc.id}')" style="background:#ff4444; color:white;">🗑️</button>
+                    </div>
+                `;
+            });
+        })
+        .catch(err => {
+            console.error("Error cargando amigos:", err);
+            lista.innerHTML = "<p style='color: red;'>Error al cargar amigos</p>";
+        });
+}
+
+function eliminarAmigo(docId) {
+    if (!confirm("¿Seguro que quieres eliminar este amigo?")) return;
+    
+    firebase.firestore().collection("amigos").doc(docId).delete()
+        .then(() => {
+            alert("Amigo eliminado");
+            cargarAmigos();
+        })
+        .catch(err => {
+            console.error("Error eliminando amigo:", err);
+            alert("Error al eliminar amigo");
+        });
+}
+
+// ========== RECOMENDACIONES ==========
+
+function abrirRecomendar() {
+    if (!peliculaParaRecomendar) return;
+    
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        alert("Debes iniciar sesión");
+        return;
+    }
+
+    document.getElementById("peliRecomendar").innerHTML = `
+        <strong style="color: #FFD700; font-size: 18px;">${peliculaParaRecomendar.title}</strong>
+    `;
+    
+    // Cargar amigos para recomendar
+    const lista = document.getElementById("listaAmigosRecomendar");
+    lista.innerHTML = "<p>Cargando amigos...</p>";
+
+    firebase.firestore().collection("amigos")
+        .where("user", "==", user.uid)
+        .get()
+        .then(snapshot => {
+            lista.innerHTML = "";
+            
+            if (snapshot.empty) {
+                lista.innerHTML = "<p style='color: #888;'>No tienes amigos para recomendar. Añade amigos primero.</p>";
+            } else {
+                snapshot.forEach(doc => {
+                    const amigo = doc.data();
+                    const inicial = getInicial(amigo.amigoEmail);
+                    
+                    lista.innerHTML += `
+                        <div class="amigo-item" style="cursor: pointer;" onclick="enviarRecomendacion('${amigo.amigoId}', '${amigo.amigoEmail}')">
+                            <img class="amigo-avatar" src="https://ui-avatars.com/api/?name=${inicial}&background=FFD700&color=000&size=128" alt="${amigo.amigoEmail}">
+                            <div class="amigo-info">
+                                <strong>${amigo.amigoEmail}</strong>
+                            </div>
+                            <button>📤 Enviar</button>
+                        </div>
+                    `;
+                });
+            }
+            
+            document.getElementById("recomendarModal").style.display = "block";
+        })
+        .catch(err => {
+            console.error("Error cargando amigos:", err);
+            lista.innerHTML = "<p style='color: red;'>Error</p>";
+        });
+}
+
+function enviarRecomendacion(amigoId, amigoEmail) {
+    const user = firebase.auth().currentUser;
+    if (!user || !peliculaParaRecomendar) return;
+
+    const db = firebase.firestore();
+    
+    // Guardar recomendación
+    db.collection("recomendaciones").add({
+        de: user.uid,
+        deEmail: user.email,
+        para: amigoId,
+        paraEmail: amigoEmail,
+        peliculaId: peliculaParaRecomendar.id,
+        peliculaTitulo: peliculaParaRecomendar.title,
+        peliculaPoster: peliculaParaRecomendar.posterPath,
+        fecha: new Date(),
+        visto: false
+    }).then(() => {
+        alert(`✅ ¡Recomendación enviada a ${amigoEmail}!`);
+        cerrarRecomendar();
+    }).catch(err => {
+        console.error("Error enviando recomendación:", err);
+        alert("Error al enviar recomendación");
+    });
+}
+
+function cerrarRecomendar() {
+    document.getElementById("recomendarModal").style.display = "none";
+}
+
+// Cargar recomendaciones recibidas
+function cargarRecomendaciones() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const lista = document.getElementById("listaRecomendaciones");
+    lista.innerHTML = "<p>Cargando...</p>";
+
+    firebase.firestore().collection("recomendaciones")
+        .where("para", "==", user.uid)
+        .orderBy("fecha", "desc")
+        .get()
+        .then(snapshot => {
+            lista.innerHTML = "";
+            
+            if (snapshot.empty) {
+                lista.innerHTML = "<p style='color: #888;'>No tienes recomendaciones pendientes.</p>";
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const rec = doc.data();
+                const poster = rec.peliculaPoster ? 
+                    `https://image.tmdb.org/t/p/w200${rec.peliculaPoster}` : 
+                    "https://via.placeholder.com/50x75?text=🎬";
+                
+                lista.innerHTML += `
+                    <div class="recomendacion-item" id="rec-${doc.id}">
+                        <img src="${poster}" alt="${rec.peliculaTitulo}" onerror="this.src='https://via.placeholder.com/50x75?text=🎬'">
+                        <div class="recomendacion-info">
+                            <strong>${rec.peliculaTitulo}</strong>
+                            <small>Recomendada por: ${rec.deEmail}</small>
+                            <small>${rec.fecha ? new Date(rec.fecha.toDate()).toLocaleDateString() : ''}</small>
+                        </div>
+                        <button onclick="verDetalle(${rec.peliculaId}); marcarVisto('${doc.id}')" style="background:#FFD700; color:#000;">👁️ Ver</button>
+                        <button onclick="eliminarRecomendacion('${doc.id}')" style="background:#ff4444; color:white;">🗑️</button>
+                    </div>
+                `;
+            });
+        })
+        .catch(err => {
+            console.error("Error cargando recomendaciones:", err);
+            lista.innerHTML = "<p style='color: red;'>Error al cargar recomendaciones</p>";
+        });
+}
+
+function marcarVisto(docId) {
+    firebase.firestore().collection("recomendaciones").doc(docId).update({
+        visto: true
+    }).catch(err => console.error("Error marcando visto:", err));
+}
+
+function eliminarRecomendacion(docId) {
+    firebase.firestore().collection("recomendaciones").doc(docId).delete()
+        .then(() => {
+            const elem = document.getElementById(`rec-${docId}`);
+            if (elem) elem.remove();
+        })
+        .catch(err => console.error("Error eliminando recomendación:", err));
+}
+
+// ========== MODALES AMIGOS ==========
+
+function verAmigos() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        alert("Debes iniciar sesión primero 👥");
+        abrirLogin();
+        return;
+    }
+
+    cargarAmigos();
+    cargarRecomendaciones();
+    document.getElementById("amigosModal").style.display = "block";
+    document.body.style.overflow = "hidden";
+}
+
+function cerrarAmigos() {
+    document.getElementById("amigosModal").style.display = "none";
+    document.body.style.overflow = "auto";
+}
+
 // 🔐 LOGIN
 function login() {
     const email = document.getElementById("email").value.trim();
@@ -431,7 +748,15 @@ function login() {
     }
 
     firebase.auth().signInWithEmailAndPassword(email, pass)
-        .then(() => {
+        .then((userCredential) => {
+            // Guardar usuario en colección de usuarios para poder buscarlo
+            const db = firebase.firestore();
+            db.collection("usuarios").doc(userCredential.user.uid).set({
+                email: email,
+                uid: userCredential.user.uid,
+                fechaRegistro: new Date()
+            }, { merge: true });
+            
             alert("Login correcto 🔥");
             cerrarLogin();
         })
@@ -456,7 +781,15 @@ function registro() {
     }
 
     firebase.auth().createUserWithEmailAndPassword(email, pass)
-        .then(() => {
+        .then((userCredential) => {
+            // Guardar nuevo usuario en colección
+            const db = firebase.firestore();
+            db.collection("usuarios").doc(userCredential.user.uid).set({
+                email: email,
+                uid: userCredential.user.uid,
+                fechaRegistro: new Date()
+            });
+            
             alert("Registrado correctamente ✅");
             cerrarLogin();
         })
@@ -548,7 +881,6 @@ function cargarFavoritosCache(userId) {
             if (searchValue) buscar();
             else if (generoActual === 0) cargarPopulares();
             else {
-                // Recargar el género actual
                 fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${generoActual}&language=es-ES&sort_by=popularity.desc`)
                     .then(res => res.json())
                     .then(data => mostrarPeliculas(data.results || []));
