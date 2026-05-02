@@ -1,6 +1,27 @@
 const apiKey = "de78d773b36e035ae311fb891704fbfa";
 let favoritosCache = [];
 
+// Función para obtener inicial válida (letra, no número)
+function getInicial(email) {
+    if (!email) return "U";
+    // Buscar la primera letra del email (antes del @)
+    const nombre = email.split('@')[0];
+    // Buscar primera letra válida (a-z, A-Z)
+    for (let char of nombre) {
+        if (/[a-zA-Z]/.test(char)) {
+            return char.toUpperCase();
+        }
+    }
+    // Si no hay letras, usar primera letra del dominio o "U"
+    const dominio = email.split('@')[1] || "";
+    for (let char of dominio) {
+        if (/[a-zA-Z]/.test(char)) {
+            return char.toUpperCase();
+        }
+    }
+    return "U";
+}
+
 // 🔍 MOSTRAR PELIS
 function mostrarPeliculas(peliculas) {
     const contenedor = document.getElementById("resultados");
@@ -46,9 +67,8 @@ function buscar() {
         .catch(err => console.error("Error buscando:", err));
 }
 
-// 🎬 DETALLE CON POSTER + PLATAFORMAS
+// 🎬 DETALLE CON POSTER + PLATAFORMAS (mejorado)
 function verDetalle(id) {
-    // Hacer dos peticiones: detalle + plataformas
     const detallePromise = fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES&append_to_response=credits`)
         .then(res => res.json());
     
@@ -64,20 +84,49 @@ function verDetalle(id) {
                 ? `https://image.tmdb.org/t/p/w500${peli.poster_path}`
                 : "https://via.placeholder.com/300x450?text=Sin+Poster";
 
-            // Obtener plataformas para España (ES) o streaming general
+            // OBTENER PLATAFORMAS - mejorado con más países y fallback
             let plataformasHTML = "";
             const results = providersData.results || {};
-            const esProviders = results.ES || results.US || Object.values(results)[0];
             
-            if (esProviders && esProviders.flatrate && esProviders.flatrate.length > 0) {
-                const plataformas = esProviders.flatrate.slice(0, 6); // Máximo 6
+            // Orden de países a buscar: ES, US, MX, AR, GB, FR, DE, IT
+            const paises = ['ES', 'US', 'MX', 'AR', 'GB', 'FR', 'DE', 'IT'];
+            let proveedoresEncontrados = null;
+            let paisEncontrado = "";
+            
+            for (let pais of paises) {
+                if (results[pais] && results[pais].flatrate && results[pais].flatrate.length > 0) {
+                    proveedoresEncontrados = results[pais].flatrate;
+                    paisEncontrado = pais;
+                    break;
+                }
+            }
+            
+            // Si no hay flatrate, buscar buy o rent
+            if (!proveedoresEncontrados) {
+                for (let pais of paises) {
+                    if (results[pais]) {
+                        if (results[pais].buy && results[pais].buy.length > 0) {
+                            proveedoresEncontrados = results[pais].buy;
+                            paisEncontrado = pais + " (compra)";
+                            break;
+                        } else if (results[pais].rent && results[pais].rent.length > 0) {
+                            proveedoresEncontrados = results[pais].rent;
+                            paisEncontrado = pais + " (alquiler)";
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (proveedoresEncontrados && proveedoresEncontrados.length > 0) {
+                const plataformas = proveedoresEncontrados.slice(0, 6);
                 plataformasHTML = `
                     <div class="plataformas">
-                        <h3>📺 Disponible en:</h3>
+                        <h3>📺 Disponible en ${paisEncontrado ? '(' + paisEncontrado + ')' : ''}:</h3>
                         <div class="plataformas-lista">
                             ${plataformas.map(p => `
                                 <div class="plataforma-item">
-                                    <img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${p.provider_name}" title="${p.provider_name}">
+                                    <img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${p.provider_name}" title="${p.provider_name}" onerror="this.style.display='none'">
                                     <span>${p.provider_name}</span>
                                 </div>
                             `).join('')}
@@ -85,10 +134,25 @@ function verDetalle(id) {
                     </div>
                 `;
             } else {
+                // Si no hay datos de streaming, mostrar mensaje más útil
+                const fechaEstreno = peli.release_date ? new Date(peli.release_date) : null;
+                const hoy = new Date();
+                const esEstreno = fechaEstreno && fechaEstreno > hoy;
+                
+                let mensajeExtra = "";
+                if (esEstreno) {
+                    mensajeExtra = `<br><span style="color: #FFD700;">🎬 Estreno el ${peli.release_date}</span>`;
+                } else if (peli.status === "Released") {
+                    mensajeExtra = `<br><span style="color: #aaa;">💿 Puede estar disponible en DVD/Blu-ray o plataformas no indexadas</span>`;
+                }
+                
                 plataformasHTML = `
                     <div class="plataformas">
                         <h3>📺 Plataformas:</h3>
-                        <p class="plataformas-mensaje">No hay información de streaming disponible para esta película.</p>
+                        <p class="plataformas-mensaje">
+                            No hay información de streaming disponible para esta película en nuestra base de datos.
+                            ${mensajeExtra}
+                        </p>
                     </div>
                 `;
             }
@@ -124,7 +188,7 @@ function cerrarModal() {
     document.body.style.overflow = "auto";
 }
 
-// ❤️ FAVORITOS - CORREGIDO: guarda posterPath correctamente
+// ❤️ FAVORITOS - CORREGIDO
 function toggleFavorito(event, id, titulo, posterPath) {
     event.stopPropagation();
 
@@ -153,8 +217,8 @@ function toggleFavorito(event, id, titulo, posterPath) {
                 corazonElem.classList.remove("activo");
                 favoritosCache = favoritosCache.filter(f => f.peliculaId !== id);
             } else {
-                // Añadir - GUARDAR posterPath correctamente
-                const posterParaGuardar = posterPath ? posterPath.replace(/\\/g, '') : '';
+                // Añadir - ASEGURAR que posterPath se guarda correctamente
+                const posterParaGuardar = posterPath ? String(posterPath).trim() : '';
                 
                 db.collection("favoritos").add({
                     user: user.uid,
@@ -179,7 +243,7 @@ function toggleFavorito(event, id, titulo, posterPath) {
         });
 }
 
-// 📂 VER FAVORITOS - CORREGIDO: mejor manejo de imágenes
+// 📂 VER FAVORITOS - CORREGIDO con recuperación de imágenes
 function verFavoritos() {
     const user = firebase.auth().currentUser;
     if (!user) {
@@ -200,32 +264,24 @@ function verFavoritos() {
 
             if (snapshot.empty) {
                 cont.innerHTML = "<p style='text-align:center; padding: 20px;'>No tienes favoritos aún ❤️</p>";
-            } else {
-                snapshot.forEach(doc => {
-                    let peli = doc.data();
-                    peli.docId = doc.id;
-                    favoritosCache.push(peli);
-                    
-                    // CORRECCIÓN: Construir URL correctamente
-                    let posterUrl;
-                    if (peli.posterPath && peli.posterPath.startsWith('/')) {
-                        posterUrl = `https://image.tmdb.org/t/p/w200${peli.posterPath}`;
-                    } else if (peli.posterPath) {
-                        posterUrl = `https://image.tmdb.org/t/p/w200/${peli.posterPath}`;
-                    } else {
-                        posterUrl = "https://via.placeholder.com/60x90?text=No+Img";
-                    }
-
-                    cont.innerHTML += `
-                        <div class="fav-item">
-                            <img class="fav-poster" src="${posterUrl}" alt="${peli.titulo}" onerror="this.src='https://via.placeholder.com/60x90?text=Error'">
-                            <span>${peli.titulo}</span>
-                            <button onclick="eliminarFav('${doc.id}')">🗑️</button>
-                            <button onclick="compartir('${peli.titulo.replace(/'/g, "\\'")}')">📤</button>
-                        </div>
-                    `;
-                });
+                document.getElementById("favModal").style.display = "block";
+                document.body.style.overflow = "hidden";
+                return;
             }
+
+            // Recopilar todos los favoritos
+            const favs = [];
+            snapshot.forEach(doc => {
+                let peli = doc.data();
+                peli.docId = doc.id;
+                favs.push(peli);
+                favoritosCache.push(peli);
+            });
+
+            // Renderizar cada favorito
+            favs.forEach(peli => {
+                renderFavItem(peli, cont);
+            });
 
             document.getElementById("favModal").style.display = "block";
             document.body.style.overflow = "hidden";
@@ -234,6 +290,90 @@ function verFavoritos() {
             console.error("Error cargando favoritos:", err);
             cont.innerHTML = "<p style='text-align:center; color:red;'>Error al cargar favoritos</p>";
         });
+}
+
+// Función para renderizar un item de favorito (con recuperación de imagen si falta)
+function renderFavItem(peli, contenedor) {
+    // Intentar construir URL de imagen
+    let posterUrl = null;
+    
+    if (peli.posterPath && peli.posterPath.trim() !== "") {
+        const path = peli.posterPath.trim();
+        if (path.startsWith('/')) {
+            posterUrl = `https://image.tmdb.org/t/p/w200${path}`;
+        } else {
+            posterUrl = `https://image.tmdb.org/t/p/w200/${path}`;
+        }
+    }
+    
+    // Si no hay posterPath, intentar recuperar de TMDB
+    if (!posterUrl) {
+        // Mostrar placeholder temporal y luego intentar recuperar
+        contenedor.innerHTML += crearFavHTML(peli, null);
+        recuperarPosterFavorito(peli, contenedor);
+        return;
+    }
+    
+    contenedor.innerHTML += crearFavHTML(peli, posterUrl);
+}
+
+// Crear HTML del favorito
+function crearFavHTML(peli, posterUrl) {
+    const tituloEscapado = peli.titulo.replace(/'/g, "\\'");
+    
+    if (posterUrl) {
+        return `
+            <div class="fav-item" id="fav-${peli.docId}">
+                <img class="fav-poster" src="${posterUrl}" alt="${peli.titulo}" onerror="this.onerror=null; this.src='https://via.placeholder.com/60x90?text=No+Img';">
+                <span>${peli.titulo}</span>
+                <button onclick="eliminarFav('${peli.docId}')">🗑️</button>
+                <button onclick="compartir('${tituloEscapado}')">📤</button>
+            </div>
+        `;
+    } else {
+        return `
+            <div class="fav-item" id="fav-${peli.docId}">
+                <div class="fav-poster-placeholder">🎬</div>
+                <span>${peli.titulo}</span>
+                <button onclick="eliminarFav('${peli.docId}')">🗑️</button>
+                <button onclick="compartir('${tituloEscapado}')">📤</button>
+            </div>
+        `;
+    }
+}
+
+// Intentar recuperar poster de TMDB si falta
+function recuperarPosterFavorito(peli, contenedor) {
+    fetch(`https://api.themoviedb.org/3/movie/${peli.peliculaId}?api_key=${apiKey}&language=es-ES`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.poster_path) {
+                // Actualizar en Firestore
+                const db = firebase.firestore();
+                db.collection("favoritos").doc(peli.docId).update({
+                    posterPath: data.poster_path
+                });
+                
+                // Actualizar en cache
+                const favEnCache = favoritosCache.find(f => f.docId === peli.docId);
+                if (favEnCache) favEnCache.posterPath = data.poster_path;
+                
+                // Actualizar en la UI si el modal está abierto
+                const favElem = document.getElementById(`fav-${peli.docId}`);
+                if (favElem) {
+                    const placeholder = favElem.querySelector('.fav-poster-placeholder');
+                    if (placeholder) {
+                        const img = document.createElement('img');
+                        img.className = 'fav-poster';
+                        img.src = `https://image.tmdb.org/t/p/w200${data.poster_path}`;
+                        img.alt = peli.titulo;
+                        img.onerror = function() { this.src = 'https://via.placeholder.com/60x90?text=No+Img'; };
+                        placeholder.replaceWith(img);
+                    }
+                }
+            }
+        })
+        .catch(err => console.error("Error recuperando poster:", err));
 }
 
 function cerrarFav() {
@@ -346,21 +486,23 @@ document.addEventListener("click", (e) => {
     }
 });
 
-// Estado de autenticación
+// Estado de autenticación - CORREGIDO: inicial válida
 firebase.auth().onAuthStateChanged(user => {
     const btn = document.getElementById("btnLogin");
     const dropdownEmail = document.getElementById("dropdownEmail");
     const dropdownAvatar = document.getElementById("dropdownAvatar");
 
     if (user) {
-        let inicial = user.email.charAt(0).toUpperCase();
-        let photoURL = user.photoURL;
+        // Usar función getInicial para obtener letra válida
+        const inicial = getInicial(user.email);
+        const photoURL = user.photoURL;
         
         if (photoURL) {
             btn.innerHTML = `<img src="${photoURL}" alt="Perfil">`;
             dropdownAvatar.src = photoURL;
         } else {
-            let avatarUrl = `https://ui-avatars.com/api/?name=${inicial}&background=FFD700&color=000&size=128&bold=true`;
+            // Generar avatar con la inicial correcta (no número)
+            let avatarUrl = `https://ui-avatars.com/api/?name=${inicial}&background=FFD700&color=000&size=128&bold=true&font-size=0.5`;
             btn.innerHTML = `<img src="${avatarUrl}" alt="Perfil">`;
             dropdownAvatar.src = avatarUrl;
         }

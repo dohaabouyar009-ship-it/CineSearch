@@ -185,6 +185,7 @@ button:hover {
     border: 2px solid #FFD700;
     overflow: hidden;
     transition: transform 0.2s;
+    font-weight: bold;
 }
 
 #btnLogin:hover {
@@ -331,7 +332,17 @@ button:hover {
     font-style: italic;
 }
 
-/* FAVORITOS - CORREGIDO */
+.plataformas-link {
+    color: #FFD700;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.plataformas-link:hover {
+    text-decoration: underline;
+}
+
+/* FAVORITOS CORREGIDO */
 #listaFav {
     max-height: 400px;
     overflow-y: auto;
@@ -361,6 +372,19 @@ button:hover {
     object-fit: cover;
     flex-shrink: 0;
     background: #222;
+    display: block;
+}
+
+.fav-poster-placeholder {
+    width: 60px;
+    height: 90px;
+    border-radius: 6px;
+    background: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
 }
 
 .fav-item span {
