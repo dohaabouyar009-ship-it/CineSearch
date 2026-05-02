@@ -4,11 +4,12 @@ body {
     color: white;
     font-family: 'Arial', sans-serif;
     text-align: center;
+    min-height: 100vh;
 }
 
 /* HEADER Y LOGO */
 header {
-    padding: 60px 20px;
+    padding: 60px 20px 20px;
     display: flex;
     justify-content: center;
     position: relative;
@@ -28,6 +29,9 @@ header {
 /* BUSCADOR */
 .buscador {
     margin: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }
 
 input {
@@ -48,6 +52,7 @@ button {
     font-weight: bold;
     font-size: 16px;
     transition: 0.3s;
+    color: #000;
 }
 
 button:hover {
@@ -61,12 +66,12 @@ button:hover {
     flex-wrap: wrap;
     justify-content: center;
     padding: 20px;
+    gap: 15px;
 }
 
 /* TARJETAS */
 .pelicula {
     width: 200px;
-    margin: 15px;
     background: #111;
     border-radius: 12px;
     overflow: hidden;
@@ -85,11 +90,14 @@ button:hover {
 .pelicula img {
     width: 100%;
     display: block;
+    height: 300px;
+    object-fit: cover;
 }
 
 .pelicula h3 {
     margin: 10px;
     font-size: 1rem;
+    min-height: 40px;
 }
 
 /* CORAZÓN EN TARJETAS */
@@ -99,10 +107,10 @@ button:hover {
     right: 10px;
     font-size: 22px;
     cursor: pointer;
-    color: white;
     z-index: 10;
     text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     transition: transform 0.2s;
+    user-select: none;
 }
 
 .corazon:hover {
@@ -123,6 +131,7 @@ button:hover {
     height: 100%;
     background: rgba(0,0,0,0.9);
     z-index: 1000;
+    overflow-y: auto;
 }
 
 .modal-content {
@@ -130,6 +139,7 @@ button:hover {
     margin: 5% auto;
     padding: 30px;
     width: 60%;
+    max-width: 800px;
     border-radius: 15px;
     color: white;
     text-align: left;
@@ -144,21 +154,22 @@ button:hover {
     font-size: 30px;
     cursor: pointer;
     color: #FFD700;
+    z-index: 10;
 }
 
 /* BOTONES HEADER */
-#btnLogin {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-}
-
 #btnFav {
     position: absolute;
     top: 20px;
     right: 80px;
     background: transparent;
     font-size: 22px;
+    padding: 10px;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* PERFIL CIRCULAR Y DROPDOWN */
@@ -181,6 +192,11 @@ button:hover {
     color: black;
     border: 2px solid #FFD700;
     overflow: hidden;
+    transition: transform 0.2s;
+}
+
+#btnLogin:hover {
+    transform: scale(1.1);
 }
 
 #btnLogin img {
@@ -230,6 +246,12 @@ button:hover {
     width: 100%;
     font-size: 14px;
     padding: 10px;
+    background: #ff4444;
+    color: white;
+}
+
+.dropdown-menu button:hover {
+    background: #cc0000;
 }
 
 /* DETALLE DE PELÍCULA EN MODAL */
@@ -252,23 +274,39 @@ button:hover {
 .detalle-info h2 {
     margin-top: 0;
     color: #FFD700;
+    font-size: 28px;
 }
 
 .detalle-info p {
-    margin: 10px 0;
+    margin: 12px 0;
     line-height: 1.6;
+    font-size: 16px;
+}
+
+.detalle-info strong {
+    color: #FFD700;
 }
 
 /* LISTA DE FAVORITOS */
+#listaFav {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
 .fav-item {
     display: flex;
     align-items: center;
     gap: 15px;
-    padding: 10px;
+    padding: 12px;
     margin: 10px 0;
     background: #111;
     border-radius: 10px;
     border: 1px solid #333;
+    transition: 0.3s;
+}
+
+.fav-item:hover {
+    border-color: #FFD700;
 }
 
 .fav-item img {
@@ -276,22 +314,26 @@ button:hover {
     height: 90px;
     object-fit: cover;
     border-radius: 6px;
+    flex-shrink: 0;
 }
 
 .fav-item span {
     flex-grow: 1;
     font-size: 16px;
+    text-align: left;
 }
 
 .fav-item button {
     padding: 8px 12px;
     font-size: 14px;
+    margin: 0 2px;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
     .detalle-contenido {
         flex-direction: column;
+        align-items: center;
     }
     
     .detalle-poster img {
@@ -302,9 +344,19 @@ button:hover {
     .modal-content {
         width: 90%;
         margin: 10% auto;
+        padding: 20px;
     }
     
     #logo {
         width: 300px;
+    }
+    
+    .buscador {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    input {
+        width: 80%;
     }
 }

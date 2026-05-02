@@ -1,6 +1,6 @@
 const apiKey = "de78d773b36e035ae311fb891704fbfa";
 
-// Variable para guardar los favoritos en memoria y saber si están activos
+// Cache de favoritos para saber qué corazones pintar
 let favoritosCache = [];
 
 // 🔍 MOSTRAR PELIS
@@ -20,13 +20,17 @@ function mostrarPeliculas(peliculas) {
         const corazonClass = esFav ? "corazon activo" : "corazon";
         const corazonIcono = esFav ? "❤️" : "🤍";
 
+        // Escapar comillas en el título para el onclick
+        const tituloEscapado = peli.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const posterPath = peli.poster_path ? peli.poster_path.replace(/'/g, "\\'") : '';
+
         contenedor.innerHTML += `
             <div class="pelicula">
                 <span class="${corazonClass}" id="c-${peli.id}"
-                onclick="toggleFavorito(event, ${peli.id}, '${peli.title.replace(/'/g, "\\'")}', '${peli.poster_path ? peli.poster_path.replace(/'/g, "\\'") : ''}')">${corazonIcono}</span>
+                onclick="toggleFavorito(event, ${peli.id}, '${tituloEscapado}', '${posterPath}')">${corazonIcono}</span>
 
                 <div onclick="verDetalle(${peli.id})">
-                    <img src="${poster}">
+                    <img src="${poster}" alt="${peli.title}">
                     <h3>${peli.title}</h3>
                     <p>${estrellas}</p>
                 </div>
@@ -37,11 +41,13 @@ function mostrarPeliculas(peliculas) {
 
 // 🔎 BUSCAR
 function buscar() {
-    const query = document.getElementById("search").value;
+    const query = document.getElementById("search").value.trim();
+    if (!query) return;
 
-    fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}&language=es-ES`)
+    fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}&language=es-ES`)
         .then(res => res.json())
-        .then(data => mostrarPeliculas(data.results));
+        .then(data => mostrarPeliculas(data.results || []))
+        .catch(err => console.error("Error buscando:", err));
 }
 
 // 🎬 DETALLE CON POSTER GRANDE AL LADO
@@ -49,9 +55,8 @@ function verDetalle(id) {
     fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=es-ES&append_to_response=credits`)
         .then(res => res.json())
         .then(peli => {
-
-            let director = peli.credits.crew.find(p => p.job === "Director");
-            let actores = peli.credits.cast.slice(0, 5).map(a => a.name).join(", ");
+            let director = peli.credits?.crew?.find(p => p.job === "Director");
+            let actores = peli.credits?.cast?.slice(0, 5).map(a => a.name).join(", ") || "No disponible";
             
             let poster = peli.poster_path
                 ? `https://image.tmdb.org/t/p/w500${peli.poster_path}`
@@ -64,29 +69,36 @@ function verDetalle(id) {
                     </div>
                     <div class="detalle-info">
                         <h2>${peli.title}</h2>
-                        <p>📅 Año: ${peli.release_date}</p>
-                        <p>🎬 Director: ${director ? director.name : "No disponible"}</p>
-                        <p>🎭 Actores: ${actores}</p>
-                        <p>⭐ Nota: ${peli.vote_average}</p>
-                        <p>📝 Sinopsis: ${peli.overview}</p>
+                        <p><strong>📅 Año:</strong> ${peli.release_date || "No disponible"}</p>
+                        <p><strong>🎬 Director:</strong> ${director ? director.name : "No disponible"}</p>
+                        <p><strong>🎭 Actores:</strong> ${actores}</p>
+                        <p><strong>⭐ Nota:</strong> ${peli.vote_average || "N/A"} / 10</p>
+                        <p><strong>📝 Sinopsis:</strong> ${peli.overview || "Sin sinopsis disponible."}</p>
                     </div>
                 </div>
             `;
 
             document.getElementById("modal").style.display = "block";
-        });
+            document.body.style.overflow = "hidden";
+        })
+        .catch(err => console.error("Error en detalle:", err));
 }
 
 function cerrarModal() {
     document.getElementById("modal").style.display = "none";
+    document.body.style.overflow = "auto";
 }
 
-// ❤️ FAVORITOS - Guarda también el poster_path
+// ❤️ FAVORITOS - Con Firebase Firestore
 function toggleFavorito(event, id, titulo, posterPath) {
     event.stopPropagation();
 
     const user = firebase.auth().currentUser;
-    if (!user) return alert("Login primero");
+    if (!user) {
+        alert("Debes iniciar sesión primero ❤️");
+        abrirLogin();
+        return;
+    }
 
     const db = firebase.firestore();
     const corazonElem = document.getElementById(`c-${id}`);
@@ -96,10 +108,11 @@ function toggleFavorito(event, id, titulo, posterPath) {
         .where("peliculaId", "==", id)
         .get()
         .then(snapshot => {
-
             if (!snapshot.empty) {
                 // Eliminar de favoritos
-                snapshot.forEach(doc => db.collection("favoritos").doc(doc.id).delete());
+                snapshot.forEach(doc => {
+                    db.collection("favoritos").doc(doc.id).delete();
+                });
                 
                 corazonElem.innerText = "🤍";
                 corazonElem.classList.remove("activo");
@@ -112,7 +125,8 @@ function toggleFavorito(event, id, titulo, posterPath) {
                     user: user.uid,
                     peliculaId: id,
                     titulo: titulo,
-                    posterPath: posterPath
+                    posterPath: posterPath,
+                    fecha: new Date()
                 });
                 
                 corazonElem.innerText = "❤️";
@@ -121,28 +135,38 @@ function toggleFavorito(event, id, titulo, posterPath) {
                 // Actualizar cache
                 favoritosCache.push({ peliculaId: id, titulo: titulo, posterPath: posterPath });
             }
+        })
+        .catch(err => {
+            console.error("Error en favoritos:", err);
+            alert("Error al guardar favorito");
         });
 }
 
-// 📂 VER FAVORITOS - Con portadas
+// 📂 VER FAVORITOS - Con portadas desde Firebase
 function verFavoritos() {
     const user = firebase.auth().currentUser;
-    if (!user) return alert("Login primero");
+    if (!user) {
+        alert("Debes iniciar sesión primero ❤️");
+        abrirLogin();
+        return;
+    }
 
     const cont = document.getElementById("listaFav");
-    cont.innerHTML = "";
+    cont.innerHTML = "<p style='text-align:center;'>Cargando...</p>";
 
     firebase.firestore().collection("favoritos")
         .where("user", "==", user.uid)
         .get()
         .then(snapshot => {
-            favoritosCache = []; // Limpiar y reconstruir cache
-            
+            favoritosCache = [];
+            cont.innerHTML = "";
+
             if (snapshot.empty) {
-                cont.innerHTML = "<p>No tienes favoritos aún ❤️</p>";
+                cont.innerHTML = "<p style='text-align:center; padding: 20px;'>No tienes favoritos aún ❤️</p>";
             } else {
                 snapshot.forEach(doc => {
                     let peli = doc.data();
+                    peli.docId = doc.id;
                     favoritosCache.push(peli);
                     
                     let poster = peli.posterPath 
@@ -154,76 +178,118 @@ function verFavoritos() {
                             <img src="${poster}" alt="${peli.titulo}">
                             <span>${peli.titulo}</span>
                             <button onclick="eliminarFav('${doc.id}')">🗑️</button>
-                            <button onclick="compartir('${peli.titulo}')">📤</button>
+                            <button onclick="compartir('${peli.titulo.replace(/'/g, "\\'")}')">📤</button>
                         </div>
                     `;
                 });
             }
-        });
 
-    document.getElementById("favModal").style.display = "block";
+            document.getElementById("favModal").style.display = "block";
+            document.body.style.overflow = "hidden";
+        })
+        .catch(err => {
+            console.error("Error cargando favoritos:", err);
+            alert("Error al cargar favoritos");
+        });
 }
 
 function cerrarFav() {
     document.getElementById("favModal").style.display = "none";
+    document.body.style.overflow = "auto";
 }
 
-function eliminarFav(id) {
-    firebase.firestore().collection("favoritos").doc(id).delete()
+function eliminarFav(docId) {
+    firebase.firestore().collection("favoritos").doc(docId).delete()
         .then(() => {
-            // Actualizar cache al eliminar
-            favoritosCache = favoritosCache.filter(f => f.id !== id);
-            verFavoritos();
+            // Actualizar cache
+            favoritosCache = favoritosCache.filter(f => f.docId !== docId);
+            verFavoritos(); // Refrescar lista
+            
+            // Refrescar vista principal para actualizar corazones
+            const searchValue = document.getElementById("search").value;
+            if (searchValue) {
+                buscar();
+            } else {
+                cargarPopulares();
+            }
+        })
+        .catch(err => {
+            console.error("Error eliminando:", err);
+            alert("Error al eliminar favorito");
         });
 }
 
 function compartir(titulo) {
     const link = window.location.href + "?peli=" + encodeURIComponent(titulo);
-    navigator.clipboard.writeText(link);
-    alert("Link copiado 🔗");
+    navigator.clipboard.writeText(link).then(() => {
+        alert("Link copiado al portapapeles 🔗");
+    });
 }
 
-// 🔐 LOGIN - Corregido el bug de variables
+// 🔐 LOGIN - Firebase Auth
 function login() {
-    const email = document.getElementById("email").value;
+    const email = document.getElementById("email").value.trim();
     const pass = document.getElementById("password").value;
+
+    if (!email || !pass) {
+        alert("Por favor introduce email y contraseña");
+        return;
+    }
 
     firebase.auth().signInWithEmailAndPassword(email, pass)
         .then(() => {
-            alert("Login 🔥");
+            alert("Login correcto 🔥");
             cerrarLogin();
         })
-        .catch(err => alert("Error: " + err.message));
+        .catch(err => {
+            console.error("Error login:", err);
+            alert("Error: " + err.message);
+        });
 }
 
 function registro() {
-    const email = document.getElementById("email").value;
+    const email = document.getElementById("email").value.trim();
     const pass = document.getElementById("password").value;
+
+    if (!email || !pass) {
+        alert("Por favor introduce email y contraseña");
+        return;
+    }
+
+    if (pass.length < 6) {
+        alert("La contraseña debe tener al menos 6 caracteres");
+        return;
+    }
 
     firebase.auth().createUserWithEmailAndPassword(email, pass)
         .then(() => {
-            alert("Registrado ✅");
+            alert("Registrado correctamente ✅");
             cerrarLogin();
         })
-        .catch(err => alert("Error: " + err.message));
+        .catch(err => {
+            console.error("Error registro:", err);
+            alert("Error: " + err.message);
+        });
 }
 
 function logout() {
     firebase.auth().signOut()
         .then(() => {
-            toggleDropdown(); // Cerrar dropdown
+            toggleDropdown();
             alert("Sesión cerrada");
+        })
+        .catch(err => {
+            console.error("Error logout:", err);
         });
 }
 
 function abrirLogin() {
     const user = firebase.auth().currentUser;
     if (user) {
-        // Si está logueado, mostrar/ocultar dropdown
         toggleDropdown();
     } else {
-        // Si no está logueado, abrir modal de login
         document.getElementById("loginModal").style.display = "block";
+        document.body.style.overflow = "hidden";
     }
 }
 
@@ -234,6 +300,7 @@ function toggleDropdown() {
 
 function cerrarLogin() {
     document.getElementById("loginModal").style.display = "none";
+    document.body.style.overflow = "auto";
 }
 
 // Cerrar dropdown al hacer click fuera
@@ -254,27 +321,25 @@ firebase.auth().onAuthStateChanged(user => {
     if (user) {
         // Usuario logueado: mostrar avatar circular
         let inicial = user.email.charAt(0).toUpperCase();
-        let photoURL = user.photoURL; // Firebase Auth puede tener foto
+        let photoURL = user.photoURL;
         
-        // Si no tiene foto de perfil, usar inicial o un avatar por defecto
         if (photoURL) {
             btn.innerHTML = `<img src="${photoURL}" alt="Perfil">`;
             dropdownAvatar.src = photoURL;
         } else {
-            // Crear avatar con inicial usando UI Avatars
-            let avatarUrl = `https://ui-avatars.com/api/?name=${inicial}&background=FFD700&color=000&size=128`;
+            let avatarUrl = `https://ui-avatars.com/api/?name=${inicial}&background=FFD700&color=000&size=128&bold=true`;
             btn.innerHTML = `<img src="${avatarUrl}" alt="Perfil">`;
             dropdownAvatar.src = avatarUrl;
         }
         
         dropdownEmail.innerText = user.email;
         
-        // Cargar favoritos en cache para mostrar corazones correctos
+        // Cargar favoritos en cache
         cargarFavoritosCache(user.uid);
     } else {
-        // No logueado: mostrar botón Login
+        // No logueado
         btn.innerText = "Login";
-        btn.innerHTML = "Login"; // Limpiar imagen si había
+        btn.innerHTML = "Login";
         dropdownAvatar.src = "";
         dropdownEmail.innerText = "";
         favoritosCache = [];
@@ -290,25 +355,35 @@ function cargarFavoritosCache(userId) {
             favoritosCache = [];
             snapshot.forEach(doc => {
                 let data = doc.data();
-                data.id = doc.id;
+                data.docId = doc.id;
                 favoritosCache.push(data);
             });
-            // Refrescar la vista actual si hay películas mostradas
+            
+            // Refrescar la vista actual
             const searchValue = document.getElementById("search").value;
             if (searchValue) {
                 buscar();
             } else {
-                // Recargar populares para actualizar corazones
-                fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=es-ES`)
-                    .then(res => res.json())
-                    .then(data => mostrarPeliculas(data.results));
+                cargarPopulares();
             }
-        });
+        })
+        .catch(err => console.error("Error cargando cache:", err));
+}
+
+// Cargar películas populares
+function cargarPopulares() {
+    fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=es-ES`)
+        .then(res => res.json())
+        .then(data => mostrarPeliculas(data.results || []))
+        .catch(err => console.error("Error cargando populares:", err));
 }
 
 // INICIO
 window.onload = () => {
-    fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=es-ES`)
-        .then(res => res.json())
-        .then(data => mostrarPeliculas(data.results));
+    cargarPopulares();
+    
+    // Buscar al presionar Enter
+    document.getElementById("search").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") buscar();
+    });
 };
