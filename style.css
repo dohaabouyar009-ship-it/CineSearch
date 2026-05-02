@@ -7,7 +7,6 @@ body {
     min-height: 100vh;
 }
 
-/* HEADER Y LOGO */
 header {
     padding: 60px 20px 20px;
     display: flex;
@@ -26,7 +25,6 @@ header {
     transform: scale(1.02);
 }
 
-/* BUSCADOR */
 .buscador {
     margin: 30px;
     display: flex;
@@ -60,7 +58,6 @@ button:hover {
     background: #e6c200;
 }
 
-/* GRID DE PELÍCULAS */
 #resultados {
     display: flex;
     flex-wrap: wrap;
@@ -69,7 +66,6 @@ button:hover {
     gap: 15px;
 }
 
-/* TARJETAS */
 .pelicula {
     width: 200px;
     background: #111;
@@ -100,7 +96,6 @@ button:hover {
     min-height: 40px;
 }
 
-/* CORAZÓN EN TARJETAS */
 .corazon {
     position: absolute;
     top: 10px;
@@ -121,7 +116,6 @@ button:hover {
     color: #ff0000;
 }
 
-/* MODAL */
 .modal {
     display: none;
     position: fixed;
@@ -157,7 +151,6 @@ button:hover {
     z-index: 10;
 }
 
-/* BOTONES HEADER */
 #btnFav {
     position: absolute;
     top: 20px;
@@ -172,7 +165,6 @@ button:hover {
     justify-content: center;
 }
 
-/* PERFIL CIRCULAR Y DROPDOWN */
 #profileContainer {
     position: absolute;
     top: 20px;
@@ -254,7 +246,7 @@ button:hover {
     background: #cc0000;
 }
 
-/* DETALLE DE PELÍCULA EN MODAL */
+/* DETALLE CON POSTER Y PLATAFORMAS */
 .detalle-contenido {
     display: flex;
     gap: 30px;
@@ -287,7 +279,59 @@ button:hover {
     color: #FFD700;
 }
 
-/* LISTA DE FAVORITOS */
+/* PLATAFORMAS DE STREAMING */
+.plataformas {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #333;
+}
+
+.plataformas h3 {
+    color: #FFD700;
+    margin-bottom: 12px;
+    font-size: 18px;
+}
+
+.plataformas-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.plataforma-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #222;
+    padding: 8px 15px;
+    border-radius: 8px;
+    border: 1px solid #444;
+    transition: 0.3s;
+}
+
+.plataforma-item:hover {
+    border-color: #FFD700;
+    transform: scale(1.05);
+}
+
+.plataforma-item img {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.plataforma-item span {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.plataformas-mensaje {
+    color: #888;
+    font-style: italic;
+}
+
+/* FAVORITOS - CORREGIDO */
 #listaFav {
     max-height: 400px;
     overflow-y: auto;
@@ -303,18 +347,20 @@ button:hover {
     border-radius: 10px;
     border: 1px solid #333;
     transition: 0.3s;
+    min-height: 90px;
 }
 
 .fav-item:hover {
     border-color: #FFD700;
 }
 
-.fav-item img {
+.fav-poster {
     width: 60px;
     height: 90px;
-    object-fit: cover;
     border-radius: 6px;
+    object-fit: cover;
     flex-shrink: 0;
+    background: #222;
 }
 
 .fav-item span {
