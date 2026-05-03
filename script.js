@@ -836,12 +836,19 @@ document.addEventListener("click", (e) => {
 });
 
 // Estado de autenticación
-firebase.auth().onAuthStateChanged(user => {
+ffirebase.auth().onAuthStateChanged(user => {
     const btn = document.getElementById("btnLogin");
     const dropdownEmail = document.getElementById("dropdownEmail");
     const dropdownAvatar = document.getElementById("dropdownAvatar");
 
     if (user) {
+        // Asegurar que el usuario está en la colección de búsqueda
+        firebase.firestore().collection("usuarios").doc(user.uid).set({
+            email: user.email,
+            uid: user.uid,
+            fechaRegistro: new Date()
+        }, { merge: true });
+
         const inicial = getInicial(user.email);
         const photoURL = user.photoURL;
         
