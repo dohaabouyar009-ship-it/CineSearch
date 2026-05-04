@@ -2,6 +2,7 @@ const apiKey = "de78d773b36e035ae311fb891704fbfa";
 let favoritosCache = [];
 let generoActual = 0;
 let peliculaParaRecomendar = null;
+let recomendacionesListener = null;
 
 function getInicial(email) {
     if (!email) return "U";
@@ -109,7 +110,6 @@ function verDetalle(id) {
                 ? `https://image.tmdb.org/t/p/w500${peli.poster_path}`
                 : "https://via.placeholder.com/300x450?text=Sin+Poster";
 
-            // Guardar para recomendar
             peliculaParaRecomendar = {
                 id: peli.id,
                 title: peli.title,
@@ -185,7 +185,6 @@ function verDetalle(id) {
                 `;
             }
 
-            // Botón recomendar solo si está logueado
             const user = firebase.auth().currentUser;
             const btnRecomendar = user ? 
                 `<button onclick="abrirRecomendar()" style="margin-top:15px; background:#ff6b6b; color:white;">🎬 Recomendar a un amigo</button>` : '';
@@ -223,7 +222,6 @@ function cerrarModal() {
     peliculaParaRecomendar = null;
 }
 
-// ❤️ FAVORITOS
 function toggleFavorito(event, id, titulo, posterPath) {
     event.stopPropagation();
 
@@ -428,26 +426,28 @@ function compartir(titulo) {
 
 // ========== SISTEMA DE AMIGOS ==========
 
-// Buscar usuario por email para añadir como amigo
 function buscarUsuario() {
-    const email = document.getElementById("buscarAmigo").value.trim();
+    const email = document.getElementById("buscarAmigo").value.trim().toLowerCase();
     const user = firebase.auth().currentUser;
+    const resultadoDiv = document.getElementById("resultadoBusqueda");
     
     if (!user) {
         alert("Debes iniciar sesión");
         return;
     }
     
-    if (!email || email === user.email) {
-        alert("Introduce un email válido diferente al tuyo");
+    if (!email) {
+        resultadoDiv.innerHTML = "<p style='color: #ff6b6b;'>Introduce un email</p>";
+        return;
+    }
+    
+    if (email === user.email.toLowerCase()) {
+        resultadoDiv.innerHTML = "<p style='color: #ff6b6b;'>No puedes añadirte a ti mismo</p>";
         return;
     }
 
-    const resultadoDiv = document.getElementById("resultadoBusqueda");
     resultadoDiv.innerHTML = "<p>Buscando...</p>";
 
-    // Buscar en Firebase Auth no es posible directamente, así que buscamos en una colección de usuarios
-    // Primero verificar si ya existe en amigos
     firebase.firestore().collection("amigos")
         .where("user", "==", user.uid)
         .where("amigoEmail", "==", email)
@@ -458,49 +458,67 @@ function buscarUsuario() {
                 return;
             }
             
-            // Buscar si el usuario existe en nuestra base de datos de usuarios
             firebase.firestore().collection("usuarios").where("email", "==", email).get()
                 .then(userSnapshot => {
-                    if (userSnapshot.empty) {
-                        resultadoDiv.innerHTML = "<p style='color: #ff6b6b;'>❌ Usuario no encontrado. Asegúrate de que tu amigo ya se ha registrado en CineSearch.</p>";
+                    if (!userSnapshot.empty) {
+                        const usuarioEncontrado = userSnapshot.docs[0].data();
+                        const uidAmigo = userSnapshot.docs[0].id;
+                        mostrarResultadoBusqueda(email, uidAmigo);
                         return;
                     }
                     
-                    const usuarioEncontrado = userSnapshot.docs[0].data();
-                    const uidAmigo = userSnapshot.docs[0].id;
-                    
                     resultadoDiv.innerHTML = `
-                        <div class="amigo-item">
-                            <img class="amigo-avatar" src="https://ui-avatars.com/api/?name=${getInicial(email)}&background=FFD700&color=000&size=128" alt="${email}">
-                            <div class="amigo-info">
-                                <strong>${email}</strong>
-                            </div>
-                            <button onclick="enviarSolicitud('${uidAmigo}', '${email}')">➕ Añadir</button>
+                        <div style="background: #222; padding: 15px; border-radius: 10px; margin-top: 10px;">
+                            <p style="color: #ff6b6b; margin-bottom: 10px;">❌ Usuario no encontrado en la base de datos.</p>
+                            <p style="color: #888; font-size: 14px;">Esto puede pasar si:</p>
+                            <ul style="color: #888; font-size: 13px; text-align: left; margin-top: 5px;">
+                                <li>Tu amigo aún no se ha registrado en CineSearch</li>
+                                <li>Tu amigo se registró antes de esta actualización</li>
+                            </ul>
+                            <p style="color: #FFD700; font-size: 13px; margin-top: 10px;">
+                                💡 Pídele a tu amigo que cierre sesión y vuelva a iniciar sesión para actualizar su cuenta.
+                            </p>
                         </div>
                     `;
+                })
+                .catch(err => {
+                    console.error("Error buscando en usuarios:", err);
+                    resultadoDiv.innerHTML = "<p style='color: red;'>Error al buscar usuario</p>";
                 });
         })
         .catch(err => {
-            console.error("Error buscando usuario:", err);
-            resultadoDiv.innerHTML = "<p style='color: red;'>Error al buscar</p>";
+            console.error("Error verificando amistad:", err);
+            resultadoDiv.innerHTML = "<p style='color: red;'>Error al verificar amistad</p>";
         });
 }
 
-// Enviar solicitud de amistad (o añadir directamente)
+function mostrarResultadoBusqueda(email, uidAmigo) {
+    const resultadoDiv = document.getElementById("resultadoBusqueda");
+    const inicial = getInicial(email);
+    
+    resultadoDiv.innerHTML = `
+        <div class="amigo-item" style="margin-top: 10px;">
+            <img class="amigo-avatar" src="https://ui-avatars.com/api/?name=${inicial}&background=FFD700&color=000&size=128" alt="${email}">
+            <div class="amigo-info">
+                <strong>${email}</strong>
+            </div>
+            <button onclick="enviarSolicitud('${uidAmigo}', '${email}')">➕ Añadir</button>
+        </div>
+    `;
+}
+
 function enviarSolicitud(uidAmigo, emailAmigo) {
     const user = firebase.auth().currentUser;
     if (!user) return;
 
     const db = firebase.firestore();
     
-    // Añadir amigo para el usuario actual
     db.collection("amigos").add({
         user: user.uid,
         amigoId: uidAmigo,
         amigoEmail: emailAmigo,
         fecha: new Date()
     }).then(() => {
-        // Añadir amigo para el otro usuario (bidireccional)
         db.collection("amigos").add({
             user: uidAmigo,
             amigoId: user.uid,
@@ -514,11 +532,10 @@ function enviarSolicitud(uidAmigo, emailAmigo) {
         });
     }).catch(err => {
         console.error("Error añadiendo amigo:", err);
-        alert("Error al añadir amigo");
+        alert("Error al añadir amigo: " + err.message);
     });
 }
 
-// Cargar lista de amigos
 function cargarAmigos() {
     const user = firebase.auth().currentUser;
     if (!user) return;
@@ -555,7 +572,7 @@ function cargarAmigos() {
         })
         .catch(err => {
             console.error("Error cargando amigos:", err);
-            lista.innerHTML = "<p style='color: red;'>Error al cargar amigos</p>";
+            lista.innerHTML = "<p style='color: red;'>Error al cargar amigos: " + err.message + "</p>";
         });
 }
 
@@ -573,7 +590,7 @@ function eliminarAmigo(docId) {
         });
 }
 
-// ========== RECOMENDACIONES ==========
+// ========== RECOMENDACIONES - CORREGIDO CON ONSNAPSHOT ==========
 
 function abrirRecomendar() {
     if (!peliculaParaRecomendar) return;
@@ -588,7 +605,6 @@ function abrirRecomendar() {
         <strong style="color: #FFD700; font-size: 18px;">${peliculaParaRecomendar.title}</strong>
     `;
     
-    // Cargar amigos para recomendar
     const lista = document.getElementById("listaAmigosRecomendar");
     lista.innerHTML = "<p>Cargando amigos...</p>";
 
@@ -631,7 +647,6 @@ function enviarRecomendacion(amigoId, amigoEmail) {
 
     const db = firebase.firestore();
     
-    // Guardar recomendación
     db.collection("recomendaciones").add({
         de: user.uid,
         deEmail: user.email,
@@ -647,7 +662,7 @@ function enviarRecomendacion(amigoId, amigoEmail) {
         cerrarRecomendar();
     }).catch(err => {
         console.error("Error enviando recomendación:", err);
-        alert("Error al enviar recomendación");
+        alert("Error al enviar recomendación: " + err.message);
     });
 }
 
@@ -655,7 +670,7 @@ function cerrarRecomendar() {
     document.getElementById("recomendarModal").style.display = "none";
 }
 
-// Cargar recomendaciones recibidas
+// CORREGIDO: Usar onSnapshot en tiempo real (no necesita índice)
 function cargarRecomendaciones() {
     const user = firebase.auth().currentUser;
     if (!user) return;
@@ -663,11 +678,15 @@ function cargarRecomendaciones() {
     const lista = document.getElementById("listaRecomendaciones");
     lista.innerHTML = "<p>Cargando...</p>";
 
-    firebase.firestore().collection("recomendaciones")
+    // Limpiar listener anterior si existe
+    if (recomendacionesListener) {
+        recomendacionesListener();
+    }
+
+    // Nuevo listener en tiempo real - NO necesita orderBy ni índice
+    recomendacionesListener = firebase.firestore().collection("recomendaciones")
         .where("para", "==", user.uid)
-        .orderBy("fecha", "desc")
-        .get()
-        .then(snapshot => {
+        .onSnapshot(snapshot => {
             lista.innerHTML = "";
             
             if (snapshot.empty) {
@@ -675,7 +694,14 @@ function cargarRecomendaciones() {
                 return;
             }
 
-            snapshot.forEach(doc => {
+            // Ordenar manualmente por fecha (más reciente primero)
+            const docs = snapshot.docs.sort((a, b) => {
+                const fechaA = a.data().fecha ? a.data().fecha.toDate() : new Date(0);
+                const fechaB = b.data().fecha ? b.data().fecha.toDate() : new Date(0);
+                return fechaB - fechaA;
+            });
+
+            docs.forEach(doc => {
                 const rec = doc.data();
                 const poster = rec.peliculaPoster ? 
                     `https://image.tmdb.org/t/p/w200${rec.peliculaPoster}` : 
@@ -686,7 +712,7 @@ function cargarRecomendaciones() {
                         <img src="${poster}" alt="${rec.peliculaTitulo}" onerror="this.src='https://via.placeholder.com/50x75?text=🎬'">
                         <div class="recomendacion-info">
                             <strong>${rec.peliculaTitulo}</strong>
-                            <small>Recomendada por: ${rec.deEmail}</small>
+                            <small>De: ${rec.deEmail}</small>
                             <small>${rec.fecha ? new Date(rec.fecha.toDate()).toLocaleDateString() : ''}</small>
                         </div>
                         <button onclick="verDetalle(${rec.peliculaId}); marcarVisto('${doc.id}')" style="background:#FFD700; color:#000;">👁️ Ver</button>
@@ -694,10 +720,9 @@ function cargarRecomendaciones() {
                     </div>
                 `;
             });
-        })
-        .catch(err => {
+        }, err => {
             console.error("Error cargando recomendaciones:", err);
-            lista.innerHTML = "<p style='color: red;'>Error al cargar recomendaciones</p>";
+            lista.innerHTML = "<p style='color: red;'>Error al cargar recomendaciones: " + err.message + "</p>";
         });
 }
 
@@ -735,9 +760,15 @@ function verAmigos() {
 function cerrarAmigos() {
     document.getElementById("amigosModal").style.display = "none";
     document.body.style.overflow = "auto";
+    // Limpiar listener al cerrar
+    if (recomendacionesListener) {
+        recomendacionesListener();
+        recomendacionesListener = null;
+    }
 }
 
-// 🔐 LOGIN
+// ========== LOGIN / AUTH ==========
+
 function login() {
     const email = document.getElementById("email").value.trim();
     const pass = document.getElementById("password").value;
@@ -749,12 +780,11 @@ function login() {
 
     firebase.auth().signInWithEmailAndPassword(email, pass)
         .then((userCredential) => {
-            // Guardar usuario en colección de usuarios para poder buscarlo
             const db = firebase.firestore();
             db.collection("usuarios").doc(userCredential.user.uid).set({
-                email: email,
+                email: email.toLowerCase(),
                 uid: userCredential.user.uid,
-                fechaRegistro: new Date()
+                ultimoLogin: new Date()
             }, { merge: true });
             
             alert("Login correcto 🔥");
@@ -782,10 +812,9 @@ function registro() {
 
     firebase.auth().createUserWithEmailAndPassword(email, pass)
         .then((userCredential) => {
-            // Guardar nuevo usuario en colección
             const db = firebase.firestore();
             db.collection("usuarios").doc(userCredential.user.uid).set({
-                email: email,
+                email: email.toLowerCase(),
                 uid: userCredential.user.uid,
                 fechaRegistro: new Date()
             });
@@ -835,13 +864,26 @@ document.addEventListener("click", (e) => {
     }
 });
 
-// Estado de autenticación
+// Estado de autenticación - CORREGIDO: Guardar usuario existente
 firebase.auth().onAuthStateChanged(user => {
     const btn = document.getElementById("btnLogin");
     const dropdownEmail = document.getElementById("dropdownEmail");
     const dropdownAvatar = document.getElementById("dropdownAvatar");
 
     if (user) {
+        // Guardar usuario en colección si no existe (para usuarios antiguos)
+        const db = firebase.firestore();
+        db.collection("usuarios").doc(user.uid).get().then(doc => {
+            if (!doc.exists) {
+                db.collection("usuarios").doc(user.uid).set({
+                    email: user.email.toLowerCase(),
+                    uid: user.uid,
+                    fechaRegistro: new Date(),
+                    migrado: true
+                });
+            }
+        });
+
         const inicial = getInicial(user.email);
         const photoURL = user.photoURL;
         

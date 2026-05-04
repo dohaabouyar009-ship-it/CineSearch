@@ -379,7 +379,6 @@ button:hover {
     font-style: italic;
 }
 
-/* AMIGOS */
 .amigos-buscar {
     display: flex;
     gap: 10px;
@@ -481,7 +480,6 @@ button:hover {
     padding-bottom: 10px;
 }
 
-/* FAVORITOS */
 #listaFav {
     max-height: 400px;
     overflow-y: auto;
@@ -538,7 +536,6 @@ button:hover {
     margin: 0 2px;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .detalle-contenido {
         flex-direction: column;
